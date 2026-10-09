@@ -1,0 +1,191 @@
+.bankroll-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-bottom: 30px;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.page-title {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.bankroll-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Summary Panel */
+.summary-panel {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.summary-panel h2 {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.bankroll-input-group {
+  display: flex;
+  align-items: center;
+  font-size: 3rem;
+  font-weight: 700;
+  gap: 8px;
+}
+
+.currency-symbol {
+  color: var(--accent-green);
+}
+
+.bankroll-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px dashed var(--border-focus);
+  font-size: 3rem;
+  font-weight: 700;
+  color: white;
+  width: 250px;
+  padding: 0;
+  border-radius: 0;
+}
+
+.bankroll-input:focus {
+  box-shadow: none;
+  border-color: var(--accent-green);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-val {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.text-green {
+  color: var(--accent-green);
+}
+
+/* Calculator Panel */
+.calculator-panel {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.calc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.calc-header h2 {
+  font-size: 1.2rem;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--accent-purple);
+  color: white;
+}
+
+.calc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.result-box {
+  margin-top: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--accent-blue);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.result-box.no-bet {
+  border-color: #ff3366;
+}
+
+.result-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stake-pct {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.stake-amt {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--accent-green);
+  line-height: 1;
+}
+
+.no-edge {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ff3366;
+  padding: 1rem 0;
+}

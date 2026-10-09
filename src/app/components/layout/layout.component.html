@@ -1,0 +1,59 @@
+<div class="app-container">
+  <aside class="sidebar glass-panel">
+    <div class="logo">
+      <span class="logo-icon"></span>
+      <h2 class="text-gradient">OmniPicks</h2>
+    </div>
+
+    <nav class="nav-menu">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      
+      <div class="nav-section-title">DEPORTES & LIGAS</div>
+      
+      <a routerLink="/picks" [queryParams]="{sport: 'soccer'}" routerLinkActive="active" class="nav-item sub-item">
+        <span class="icon">⚽</span> Fútbol
+      </a>
+      <a routerLink="/picks" [queryParams]="{sport: 'nba'}" routerLinkActive="active" class="nav-item sub-item">
+        <span class="icon">🏀</span> NBA
+      </a>
+      <a routerLink="/picks" [queryParams]="{sport: 'nfl'}" routerLinkActive="active" class="nav-item sub-item">
+        <span class="icon">🏈</span> NFL
+      </a>
+      <a routerLink="/picks" [queryParams]="{sport: 'mlb'}" routerLinkActive="active" class="nav-item sub-item">
+        <span class="icon">⚾</span> MLB
+      </a>
+
+      <div class="nav-section-title">HERRAMIENTAS</div>
+
+      <a routerLink="/odds" routerLinkActive="active" class="nav-item">
+        <span class="icon">📈</span> Comparador Odds
+      </a>
+      <a routerLink="/bankroll" routerLinkActive="active" class="nav-item">
+        <span class="icon">💰</span> Bankroll & Kelly
+      </a>
+    </nav>
+    
+    <div class="user-status">
+      <div class="status-indicator"></div>
+      <span>Sistemas Online</span>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar glass-panel">
+      <div class="date-display">
+        {{ currentDate | date:'fullDate' }}
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-outline">Refresh Data</button>
+        <div class="profile-circle">R</div>
+      </div>
+    </header>
+    
+    <div class="content-area">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

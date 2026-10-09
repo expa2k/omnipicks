@@ -1,0 +1,151 @@
+.odds-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-bottom: 30px;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.page-title {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.table-container {
+  overflow-x: auto;
+  padding: 1px;
+}
+
+.odds-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  text-align: left;
+}
+
+.odds-table th {
+  padding: 0 20px 12px 20px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.bookmaker-th {
+  text-align: center;
+}
+
+.bookmaker-header {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  font-weight: 700;
+}
+
+.table-row {
+  background: rgba(0, 0, 0, 0.2);
+  transition: var(--transition);
+}
+
+.table-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.table-row td {
+  padding: 16px 20px;
+  vertical-align: middle;
+}
+
+.table-row td:first-child {
+  border-top-left-radius: var(--radius-md);
+  border-bottom-left-radius: var(--radius-md);
+}
+
+.table-row td:last-child {
+  border-top-right-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+
+.sport-badge {
+  display: inline-block;
+  width: fit-content;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.matchup-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.matchup-teams {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.market-badge {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-focus);
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+}
+
+.odds-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.odd-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 70px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  transition: var(--transition);
+}
+
+.odd-box.best-odd {
+  background: var(--accent-green-dim);
+  border-color: var(--accent-green);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+}
+
+.odd-box.best-odd .odd-val {
+  color: var(--accent-green);
+  font-weight: 700;
+}
+
+.odd-label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.odd-val {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.no-odds {
+  text-align: center;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}

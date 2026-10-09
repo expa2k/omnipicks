@@ -1,0 +1,78 @@
+<div class="bankroll-container">
+  <div class="header-section">
+    <div>
+      <h1 class="page-title">Gestión de <span class="text-gradient">Bankroll</span></h1>
+      <p class="subtitle text-secondary">Controla tu dinero y calcula tus apuestas matemáticamente usando el Criterio de Kelly.</p>
+    </div>
+  </div>
+
+  <div class="bankroll-grid">
+    <!-- Resumen -->
+    <div class="summary-panel glass-panel">
+      <h2>Tu Bankroll</h2>
+      <div class="bankroll-input-group">
+        <span class="currency-symbol">$</span>
+        <input type="number" [value]="currentBankroll" (input)="updateBankroll($event)" class="bankroll-input">
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-label">Ganancia Mensual</span>
+          <span class="stat-val text-green">+$245.50</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">ROI Total</span>
+          <span class="stat-val text-green">+12.4%</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Picks Ganados</span>
+          <span class="stat-val">58 / 102</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kelly Calculator -->
+    <div class="calculator-panel glass-panel">
+      <div class="calc-header">
+        <h2>Calculadora Kelly</h2>
+        <span class="badge">Herramienta</span>
+      </div>
+
+      <div class="calc-body">
+        <div class="input-row">
+          <div class="input-group">
+            <label>Cuota (American Odds)</label>
+            <input type="number" [value]="calcOdds" (input)="updateOdds($event)" placeholder="-110">
+          </div>
+          <div class="input-group">
+            <label>Probabilidad del Modelo (%)</label>
+            <input type="number" [value]="calcProb" (input)="updateProb($event)" placeholder="55">
+          </div>
+        </div>
+
+        <div class="input-group full">
+          <label>Nivel de Riesgo (Kelly Fraction)</label>
+          <select [value]="kellyFraction" (change)="updateFraction($event)">
+            <option [value]="1.0">Full Kelly (Agresivo - No recomendado)</option>
+            <option [value]="0.5">Half Kelly (Moderado)</option>
+            <option [value]="0.25">Quarter Kelly (Conservador - Sugerido)</option>
+            <option [value]="0.125">Eighth Kelly (Muy Conservador)</option>
+          </select>
+        </div>
+
+        <div class="result-box" [class.no-bet]="suggestedStake === 0">
+          <div class="result-label">Recomendación Matemática</div>
+          
+          <div *ngIf="suggestedStake > 0" class="bet-action">
+            <div class="stake-pct">Apostar el <span class="text-gradient">{{ suggestedStake | number:'1.1-2' }}%</span></div>
+            <div class="stake-amt">${{ suggestedAmount | number:'1.2-2' }}</div>
+          </div>
+          
+          <div *ngIf="suggestedStake === 0" class="bet-action no-edge">
+            NO APOSTAR (Sin valor matemático +EV)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

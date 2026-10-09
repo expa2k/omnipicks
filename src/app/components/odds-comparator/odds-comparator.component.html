@@ -1,0 +1,52 @@
+<div class="odds-container">
+  <div class="header-section">
+    <div>
+      <h1 class="page-title">Comparador de <span class="text-gradient">Líneas (Odds)</span></h1>
+      <p class="subtitle text-secondary">Encuentra el casino que paga más para maximizar tus ganancias a largo plazo.</p>
+    </div>
+  </div>
+
+  <div class="table-container glass-panel">
+    <table class="odds-table">
+      <thead>
+        <tr>
+          <th>Partido</th>
+          <th>Mercado</th>
+          <th *ngFor="let book of sportsbooks" class="bookmaker-th">
+            <div class="bookmaker-header">{{ book }}</div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let game of games" class="table-row">
+          <td>
+            <div class="matchup-cell">
+              <span class="sport-badge">{{ game.sport }}</span>
+              <span class="matchup-teams">{{ game.matchup }}</span>
+              <span class="matchup-date text-secondary">{{ game.time }}</span>
+            </div>
+          </td>
+          <td><span class="market-badge">{{ game.market }}</span></td>
+          
+          <td *ngFor="let book of sportsbooks">
+            <div class="odds-stack" *ngIf="game.odds[book]">
+              <div class="odd-box" [class.best-odd]="game.odds[book].isBestHome">
+                <span class="odd-label">H</span>
+                <span class="odd-val">{{ game.odds[book].home }}</span>
+              </div>
+              <div class="odd-box" *ngIf="game.odds[book].draw" [class.best-odd]="game.odds[book].isBestDraw">
+                <span class="odd-label">D</span>
+                <span class="odd-val">{{ game.odds[book].draw }}</span>
+              </div>
+              <div class="odd-box" [class.best-odd]="game.odds[book].isBestAway">
+                <span class="odd-label">A</span>
+                <span class="odd-val">{{ game.odds[book].away }}</span>
+              </div>
+            </div>
+            <div class="no-odds" *ngIf="!game.odds[book]">-</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
