@@ -1,0 +1,213 @@
+<article class="game card" [class.is-expanded]="expanded" [class.compact]="compact">
+  <!-- Encabezado -->
+  <header class="game-head">
+    <div class="meta">
+      <span class="league">
+        <app-icon [name]="sportIcon(game.sport)" />
+        {{ game.league || game.sport }}
+      </span>
+      <span class="dot">·</span>
+      <span class="time"><app-icon name="clock" /> {{ game.game_time | date: 'h:mm a' : undefined : 'es' }}</span>
+      @if (game.venue && !compact) {
+        <span class="dot hide-sm">·</span>
+        <span class="venue hide-sm"><app-icon name="pin" /> {{ game.venue }}</span>
+      }
+    </div>
+    @if (hasPrediction) {
+      <span class="chip" [ngClass]="confidence.tone ? 'chip-' + confidence.tone : ''"
+            title="Según cuántos datos hay de ambos equipos (no según qué tan parejo es el partido)">Confianza {{ confidence.label | lowercase }}</span>
+    }
+  </header>
+
+  <!-- Equipos -->
+  <div class="teams">
+    @for (side of ['away', 'home']; track side) {
+      @let name = side === 'home' ? game.home_team : game.away_team;
+      @let prob = side === 'home' ? p?.home_win_prob : p?.away_win_prob;
+      @let score = side === 'home' ? p?.predicted_home_score : p?.predicted_away_score;
+      <div class="team-row" [class.is-fav]="hasPrediction && favorite === side">
+        <span class="avatar" [style.--h]="teamHue(name)">{{ initials(name) }}</span>
+        <div class="team-name">
+          <span class="name">{{ name }}</span>
+          <span class="role">{{ side === 'home' ? 'Local' : 'Visita' }}{{ factors?.[side + '_record'] ? ' · ' + factors[side + '_record'] : '' }}</span>
+        </div>
+        @if (hasPrediction) {
+          <span class="team-prob num">{{ pct(prob) }}</span>
+          <span class="team-score num">{{ score | number: scoreDigits }}</span>
+        }
+      </div>
+    }
+  </div>
+
+  @if (hasPrediction) {
+    <!-- Barra de probabilidad -->
+    <div class="prob-bar" role="img" [attr.aria-label]="'Probabilidad: visita ' + pct(p.away_win_prob) + ', local ' + pct(p.home_win_prob)">
+      <span class="seg away" [style.flex-grow]="p.away_win_prob"></span>
+      @if (p.draw_prob > 0) { <span class="seg draw" [style.flex-grow]="p.draw_prob"></span> }
+      <span class="seg home" [style.flex-grow]="p.home_win_prob"></span>
+    </div>
+    @if (p.draw_prob > 0) {
+      <div class="draw-note">Empate {{ pct(p.draw_prob) }}</div>
+    }
+
+    <!-- Resumen rápido -->
+    <div class="quick">
+      <div class="stat"><span class="k">{{ isSoccer ? 'Diferencia' : 'Spread' }}</span><span class="v num">{{ spreadLabel }}</span></div>
+      <div class="stat"><span class="k">Total</span><span class="v num">{{ p.predicted_total | number: '1.1-1' }}</span></div>
+      @if (marketLine) {
+        <div class="stat"><span class="k">Mercado</span><span class="v num">{{ marketLine }}</span></div>
+      }
+      @if (game.value_picks?.length) {
+        <div class="stat"><span class="k">Picks</span><span class="v"><span class="chip chip-success">{{ game.value_picks.length }}</span></span></div>
+      }
+    </div>
+  } @else if (hasError) {
+    <div class="notice warning">
+      <app-icon name="alert" />
+      <div><strong>Sin datos suficientes.</strong> {{ factors.api_error }}</div>
+    </div>
+  } @else {
+    <div class="notice"><app-icon name="clock" /> Analizando este partido…</div>
+  }
+
+  @if (hasPrediction && !compact) {
+    <button class="expand" (click)="toggle()" [attr.aria-expanded]="expanded">
+      {{ expanded ? 'Ocultar análisis' : 'Ver análisis' }}
+      <app-icon name="chevron" [class.rot]="expanded" />
+    </button>
+  }
+
+  <!-- Análisis detallado -->
+  @if (expanded) {
+    <section class="details fade-in">
+      <!-- Comparación de equipos -->
+      @if (pairs.length) {
+        <div class="block">
+          <div class="block-head">
+            <h4>Comparación</h4>
+            <div class="legend">
+              <span class="lg away">{{ initials(game.away_team) }}</span>
+              <span class="lg home">{{ initials(game.home_team) }}</span>
+            </div>
+          </div>
+          <div class="compare">
+            @for (r of visiblePairs; track r.key) {
+              <div class="c-row">
+                <span class="c-val num" [class.better]="r.better === 'away'">{{ formatValue(r.away, r.key) }}</span>
+                <span class="c-label">{{ r.label }}</span>
+                <span class="c-val num right" [class.better]="r.better === 'home'">{{ formatValue(r.home, r.key) }}</span>
+              </div>
+            }
+          </div>
+          @if (pairs.length > 8) {
+            <button class="link" (click)="showAllFactors = !showAllFactors">
+              {{ showAllFactors ? 'Ver menos' : 'Ver los ' + pairs.length + ' factores' }}
+            </button>
+          }
+        </div>
+      }
+
+      <div class="side">
+        <!-- Modelo vs mercado -->
+        <div class="block">
+          <div class="block-head"><h4>Modelo vs mercado</h4></div>
+          @if (market.home !== null) {
+            <div class="mvm">
+              <div class="mvm-row head"><span></span><span>Modelo</span><span>Mercado</span></div>
+              <div class="mvm-row">
+                <span>{{ game.away_team }}</span>
+                <span class="num strong">{{ pct(p.away_win_prob) }}</span>
+                <span class="num">{{ pct(market.away) }}</span>
+              </div>
+              @if (market.draw !== null) {
+                <div class="mvm-row">
+                  <span>Empate</span>
+                  <span class="num strong">{{ pct(p.draw_prob) }}</span>
+                  <span class="num">{{ pct(market.draw) }}</span>
+                </div>
+              }
+              <div class="mvm-row">
+                <span>{{ game.home_team }}</span>
+                <span class="num strong">{{ pct(p.home_win_prob) }}</span>
+                <span class="num">{{ pct(market.home) }}</span>
+              </div>
+            </div>
+            <p class="fine">Probabilidad del mercado sin el margen del casino ({{ game.odds?.best_home_ml?.sportsbook }}).
+              Momios: {{ formatAmerican(game.odds?.best_away_ml?.odds) }} / {{ formatAmerican(game.odds?.best_home_ml?.odds) }}.</p>
+          } @else {
+            <p class="fine">Todavía no hay línea del mercado para este partido.</p>
+          }
+          @if (marketLine || marketTotal !== null) {
+            <div class="line-compare">
+              @if (marketLine) {
+                <div><span class="k">Spread</span><span class="num">{{ spreadLabel }}</span><span class="faint num">vs {{ marketLine }}</span></div>
+              }
+              @if (marketTotal !== null) {
+                <div><span class="k">Total</span><span class="num">{{ p.predicted_total | number: '1.1-1' }}</span><span class="faint num">vs {{ marketTotal }}</span></div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Diferencias con el mercado (picks) -->
+        @if (game.value_picks?.length) {
+          <div class="block">
+            <div class="block-head"><h4>Diferencias con el mercado</h4></div>
+            <div class="picks">
+              @for (pk of game.value_picks; track pk.id) {
+                <div class="pick">
+                  <div class="pick-main">
+                    <span class="pick-name">{{ pk.pick_description }}</span>
+                    <span class="faint">{{ pk.best_sportsbook }} · {{ formatAmerican(pk.best_odds) }}</span>
+                  </div>
+                  <span class="chip chip-success num">{{ signed(pk.model_edge * 100) }} pts</span>
+                </div>
+              }
+            </div>
+            <p class="fine">El modelo no usa el mercado: esto solo muestra dónde difieren.</p>
+          </div>
+        }
+
+        <!-- Contexto -->
+        @if (info.length || simInfo.length) {
+          <div class="block">
+            <div class="block-head"><h4>Contexto</h4></div>
+            <dl class="kv">
+              @for (r of info; track r.key) {
+                <div><dt>{{ r.label }}</dt><dd class="num">{{ formatValue(r.value) }}</dd></div>
+              }
+              @for (r of simInfo; track r.label) {
+                <div><dt>{{ r.label }}</dt><dd class="num">{{ r.value }}</dd></div>
+              }
+            </dl>
+          </div>
+        }
+      </div>
+
+      <!-- Alineaciones (fútbol) -->
+      @if (game.lineups && isSoccer) {
+        <div class="block lineups">
+          <div class="block-head"><h4>Alineaciones probables</h4></div>
+          <div class="lineup-grid">
+            @for (side of ['away', 'home']; track side) {
+              @let lu = game.lineups[side];
+              @if (lu) {
+                <div class="lineup">
+                  <div class="lineup-head">
+                    <strong>{{ side === 'home' ? game.home_team : game.away_team }}</strong>
+                    <span class="chip">{{ lu.formation || 'N/D' }}</span>
+                  </div>
+                  <ul>
+                    @for (pl of lu.players; track $index) {
+                      <li><span class="faint num">{{ pl.number }}</span> {{ pl.name }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      }
+    </section>
+  }
+</article>

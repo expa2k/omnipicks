@@ -1,254 +1,97 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { HttpClientModule } from '@angular/common/http';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ApiService } from '../../services/api.service';
+import { GameCardComponent } from '../game-card/game-card.component';
+import { IconComponent } from '../icon/icon.component';
+import { sportIcon, sportLabel } from '../../utils/format';
+
+type Filter = 'all' | 'value' | 'high_confidence';
 
 @Component({
   selector: 'app-picks-table',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule, GameCardComponent, IconComponent],
   templateUrl: './picks-table.component.html',
   styleUrl: './picks-table.component.css',
-  providers: [ApiService]
 })
 export class PicksTableComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly api = inject(ApiService);
+  private readonly destroyRef = inject(DestroyRef);
+
   games: any[] = [];
   filteredGames: any[] = [];
   loading = true;
-  currentSport = 'TODOS LOS DEPORTES';
-  activeFilter = 'all';
+  error = false;
+  sport: string | undefined;
+  activeFilter: Filter = 'all';
+  search = '';
+  date: string | null = null;
 
-  constructor(
-    private route: ActivatedRoute,
-    private apiService: ApiService
-  ) {}
+  readonly filters: { key: Filter; label: string }[] = [
+    { key: 'all', label: 'Todos' },
+    { key: 'value', label: 'Con diferencias vs mercado' },
+    { key: 'high_confidence', label: 'Confianza alta' },
+  ];
+
+  get title() { return sportLabel(this.sport); }
+  get icon() { return sportIcon(this.sport); }
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      const sport = params['sport'];
-      if (sport) {
-        this.currentSport = sport.toUpperCase();
-      } else {
-        this.currentSport = 'TODOS LOS DEPORTES';
-      }
-      this.fetchGames(sport);
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      this.sport = params['sport'];
+      this.fetch();
     });
+    this.api.refresh$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.fetch());
   }
 
-  fetchGames(sport?: string) {
+  fetch() {
     this.loading = true;
-    this.apiService.getGamePredictions(sport).subscribe({
+    this.error = false;
+    this.api.getGamePredictions(this.sport).subscribe({
       next: (data: any) => {
         this.games = data.games || [];
+        this.date = data.date || null;
         this.applyFilter();
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error fetching game predictions:', err);
-        this.simulateData();
+        console.error('Error al cargar partidos:', err);
+        this.games = [];
+        this.applyFilter();
+        this.error = true;
         this.loading = false;
-      }
+      },
     });
   }
 
-  simulateData() {
-    this.games = [
-      {
-        id: '1',
-        sport: 'NBA',
-        league: 'NBA',
-        home_team: 'BOS Celtics',
-        away_team: 'LAL Lakers',
-        game_time: '2026-06-13T20:00:00',
-        venue: 'TD Garden',
-        status: 'scheduled',
-        prediction: {
-          home_win_prob: 0.62,
-          away_win_prob: 0.38,
-          draw_prob: 0,
-          predicted_home_score: 112,
-          predicted_away_score: 105,
-          confidence: 0.82,
-          matchup_factors: {
-            home_offensive_rating: 118.5,
-            away_defensive_rating: 110.2,
-            pace_factor: 100.3,
-            home_court_advantage: 3.2
-          },
-          simulation_details: {
-            num_simulations: 10000,
-            avg_simulated_total: 217.4,
-            home_implied_runs: 112,
-            away_implied_runs: 105
-          }
-        },
-        odds: {
-          best_home_ml: -150,
-          best_away_ml: +130,
-          best_draw: null
-        },
-        value_pick: {
-          pick_description: 'BOS Celtics ML',
-          model_edge: 0.08,
-          expected_value: 0.06,
-          value_rating: 4,
-          best_odds: '-150',
-          best_sportsbook: 'DraftKings'
-        }
-      },
-      {
-        id: '2',
-        sport: 'NBA',
-        league: 'NBA',
-        home_team: 'DEN Nuggets',
-        away_team: 'MIA Heat',
-        game_time: '2026-06-13T21:30:00',
-        venue: 'Ball Arena',
-        status: 'scheduled',
-        prediction: {
-          home_win_prob: 0.55,
-          away_win_prob: 0.45,
-          draw_prob: 0,
-          predicted_home_score: 108,
-          predicted_away_score: 103,
-          confidence: 0.68,
-          matchup_factors: {
-            home_offensive_rating: 115.1,
-            away_defensive_rating: 112.6,
-            altitude_factor: 1.05
-          },
-          simulation_details: {
-            num_simulations: 10000,
-            avg_simulated_total: 211.0,
-            home_implied_runs: 108,
-            away_implied_runs: 103
-          }
-        },
-        odds: {
-          best_home_ml: -200,
-          best_away_ml: +170,
-          best_draw: null
-        },
-        value_pick: null
-      },
-      {
-        id: '3',
-        sport: 'SOCCER',
-        league: 'La Liga',
-        home_team: 'Real Madrid',
-        away_team: 'Barcelona',
-        game_time: '2026-06-14T14:00:00',
-        venue: 'Santiago Bernabéu',
-        status: 'scheduled',
-        prediction: {
-          home_win_prob: 0.42,
-          away_win_prob: 0.30,
-          draw_prob: 0.28,
-          predicted_home_score: 2.1,
-          predicted_away_score: 1.6,
-          confidence: 0.58,
-          matchup_factors: {
-            home_xg_avg: 2.1,
-            away_xg_avg: 1.8,
-            head_to_head_home_wins: 5,
-            head_to_head_draws: 3
-          },
-          simulation_details: {
-            num_simulations: 10000,
-            avg_simulated_total: 3.7,
-            home_xg_simulated: 2.1,
-            away_xg_simulated: 1.6
-          }
-        },
-        odds: {
-          best_home_ml: +110,
-          best_away_ml: +250,
-          best_draw: +220
-        },
-        value_pick: {
-          pick_description: 'Over 2.5 Goles',
-          model_edge: 0.10,
-          expected_value: 0.09,
-          value_rating: 5,
-          best_odds: '+105',
-          best_sportsbook: 'BetMGM'
-        }
-      }
-    ];
+  setFilter(f: Filter) {
+    this.activeFilter = f;
     this.applyFilter();
   }
 
-  // --- Filter logic ---
-
-  setFilter(filter: string) {
-    this.activeFilter = filter;
+  onSearch(value: string) {
+    this.search = value;
     this.applyFilter();
+  }
+
+  count(f: Filter): number {
+    return this.games.filter(g => this.matches(g, f)).length;
   }
 
   applyFilter() {
-    switch (this.activeFilter) {
-      case 'value':
-        this.filteredGames = this.games.filter(g => g.value_picks && g.value_picks.length > 0);
-        break;
-      case 'high_confidence':
-        this.filteredGames = this.games.filter(g => g.prediction?.confidence > 0.8);
-        break;
-      default:
-        this.filteredGames = [...this.games];
-    }
+    const q = this.search.trim().toLowerCase();
+    this.filteredGames = this.games.filter(g =>
+      this.matches(g, this.activeFilter) &&
+      (!q || `${g.home_team} ${g.away_team} ${g.league}`.toLowerCase().includes(q))
+    );
   }
 
-  // --- Row expand ---
-
-  expandedGameId: string | null = null;
-
-  toggleRow(gameId: string) {
-    this.expandedGameId = this.expandedGameId === gameId ? null : gameId;
-  }
-
-  // --- Helpers ---
-
-  getConfidenceLabel(confidence: number): string {
-    if (confidence > 0.8) return 'Alta';
-    if (confidence > 0.65) return 'Media';
-    return 'Baja';
-  }
-
-  getConfidenceClass(confidence: number): string {
-    if (confidence > 0.8) return 'confidence-alta';
-    if (confidence > 0.65) return 'confidence-media';
-    return 'confidence-baja';
-  }
-
-  getHighestProb(prediction: any): string {
-    const probs = [
-      { label: 'home', val: prediction.home_win_prob },
-      { label: 'away', val: prediction.away_win_prob },
-      { label: 'draw', val: prediction.draw_prob || 0 }
-    ];
-    return probs.sort((a, b) => b.val - a.val)[0].label;
-  }
-
-  formatOdds(oddsObj: any): string {
-    if (!oddsObj || oddsObj.odds === null || oddsObj.odds === undefined) return '—';
-    const odds = oddsObj.odds;
-    return odds > 0 ? `+${odds}` : `${odds}`;
-  }
-
-  getRatingStars(rating: number): string {
-    return '⭐'.repeat(rating);
-  }
-
-  objectKeys(obj: any): string[] {
-    return obj ? Object.keys(obj) : [];
-  }
-
-  formatKey(key: string): string {
-    return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  }
-
-  isNumber(val: any): boolean {
-    return typeof val === 'number' && !isNaN(val);
+  private matches(g: any, f: Filter): boolean {
+    if (f === 'value') return (g.value_picks?.length || 0) > 0;
+    if (f === 'high_confidence') return (g.prediction?.confidence || 0) >= 0.8;
+    return true;
   }
 }

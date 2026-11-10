@@ -1,14 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ApiService {
   private baseUrl = 'http://localhost:8000/api';
 
-  constructor(private http: HttpClient) { }
+  /** Se emite cuando el usuario pulsa "Actualizar" en la barra superior. */
+  readonly refresh$ = new Subject<void>();
+
+  constructor(private http: HttpClient) {}
+
+  refresh() {
+    this.refresh$.next();
+  }
 
   getDashboardSummary(): Observable<any> {
     return this.http.get(`${this.baseUrl}/predictions/dashboard`);

@@ -1,53 +1,68 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
+import { RouterModule } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { forkJoin } from 'rxjs';
 import { ApiService } from '../../services/api.service';
+import { GameCardComponent } from '../game-card/game-card.component';
+import { IconComponent } from '../icon/icon.component';
+import { formatAmerican, SPORTS } from '../../utils/format';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule, RouterModule, GameCardComponent, IconComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
-  providers: [ApiService]
 })
 export class DashboardComponent implements OnInit {
-  dashboardData: any = null;
-  totalGames = 0;
-  totalPicks = 0;
-  totalSports = 0;
+  private readonly api = inject(ApiService);
+  private readonly destroyRef = inject(DestroyRef);
+
   loading = true;
   error = false;
+  summary: any = null;
+  upcoming: any[] = [];
+  totalGames = 0;
+  totalPicks = 0;
+  sportsWithGames = 0;
+  nextGame: any = null;
 
-  constructor(private apiService: ApiService) {}
+  readonly sports = SPORTS;
+  readonly formatAmerican = formatAmerican;
 
   ngOnInit() {
-    this.apiService.getDashboardSummary().subscribe({
-      next: (data) => {
-        this.dashboardData = data;
-        
-        let games = 0;
-        let sports = 0;
-        for (const [sport, count] of Object.entries(data.games_today || {})) {
-          games += count as number;
-          sports++;
-        }
-        this.totalGames = games;
-        this.totalSports = sports;
+    this.load();
+    this.api.refresh$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.load());
+  }
 
-        let picks = 0;
-        for (const [sport, stats] of Object.entries(data.picks_today || {})) {
-          picks += (stats as any).total;
-        }
-        this.totalPicks = picks;
-
+  load() {
+    this.loading = true;
+    this.error = false;
+    forkJoin({ summary: this.api.getDashboardSummary(), games: this.api.getGamePredictions() }).subscribe({
+      next: ({ summary, games }: any) => {
+        this.summary = summary;
+        const list = (games.games || []).slice().sort((a: any, b: any) => (a.game_time || '').localeCompare(b.game_time || ''));
+        this.upcoming = list.slice(0, 4);
+        this.nextGame = list[0] || null;
+        this.totalGames = list.length;
+        this.sportsWithGames = new Set(list.map((g: any) => g.sport)).size;
+        this.totalPicks = Object.values(summary.picks_today || {}).reduce((acc: number, s: any) => acc + (s.total || 0), 0);
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error fetching dashboard data:', err);
+        console.error('Error al cargar el resumen:', err);
         this.error = true;
         this.loading = false;
-      }
+      },
     });
+  }
+
+  gamesFor(sportKey: string): number {
+    return this.summary?.games_today?.[sportKey.toUpperCase()] || 0;
+  }
+
+  picksFor(sportKey: string): number {
+    return this.summary?.picks_today?.[sportKey.toUpperCase()]?.total || 0;
   }
 }

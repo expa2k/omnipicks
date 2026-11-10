@@ -1,87 +1,114 @@
-<div class="dashboard-grid">
-  <!-- Top Stat Cards -->
-  <div class="stat-card glass-panel">
-    <div class="stat-header">
-      <h3>Games Today</h3>
-      <span class="badge" *ngIf="totalGames > 0">Live</span>
+<div class="page fade-in">
+  <div class="page-header">
+    <div>
+      <span class="eyebrow">Resumen del día</span>
+      <h1 class="page-title">Hola, esto es lo que hay hoy</h1>
+      <p class="page-subtitle">Pronósticos generados con datos reales y miles de simulaciones por partido.</p>
     </div>
-    <div class="stat-value">{{ totalGames }}</div>
-    <div class="stat-footer text-secondary">Across {{ totalSports }} sports</div>
+    <a routerLink="/picks" class="btn btn-primary">Ver cartelera <app-icon name="arrow-right" /></a>
   </div>
 
-  <div class="stat-card glass-panel">
-    <div class="stat-header">
-      <h3>Value Picks</h3>
-      <span class="badge bg-green" *ngIf="totalPicks > 0">Ready</span>
+  @if (error) {
+    <div class="card empty-state">
+      <div class="empty-icon"><app-icon name="alert" /></div>
+      <h3>No se pudo conectar con el servidor</h3>
+      <p>Revisa que el backend esté corriendo en <code>localhost:8000</code>.</p>
+      <button class="btn btn-primary" (click)="load()"><app-icon name="refresh" /> Reintentar</button>
     </div>
-    <div class="stat-value text-gradient">{{ totalPicks }}</div>
-    <div class="stat-footer text-secondary">+EV Detected</div>
-  </div>
-
-  <div class="stat-card glass-panel">
-    <div class="stat-header">
-      <h3>Weekly ROI</h3>
-    </div>
-    <div class="stat-value text-green">+14.2%</div>
-    <div class="stat-footer text-secondary">Based on Kelly sizing</div>
-  </div>
-
-  <div class="stat-card glass-panel">
-    <div class="stat-header">
-      <h3>Model Confidence</h3>
-    </div>
-    <div class="stat-value">High</div>
-    <div class="stat-footer text-secondary">All data ingested successfully</div>
-  </div>
-
-  <!-- Featured Pick Section -->
-  <div class="featured-pick glass-panel" *ngIf="dashboardData?.top_pick; else noPick">
-    <div class="featured-header">
-      <h2>⭐ Top Value Pick of the Day</h2>
-      <span class="sport-badge">{{ dashboardData.top_pick.sport | uppercase }}</span>
-    </div>
-    
-    <div class="matchup">
-      <div class="team" style="flex: 1; text-align: center;">
-        <h3 style="font-size: 1.5rem; margin: 0;">{{ dashboardData.top_pick.pick_description }}</h3>
+  } @else {
+    <!-- KPIs -->
+    <section class="kpis">
+      <div class="card kpi">
+        <div class="kpi-icon accent"><app-icon name="calendar" /></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Partidos por jugar</span>
+          @if (loading) { <span class="skeleton sk-num"></span> } @else { <span class="kpi-value num">{{ totalGames }}</span> }
+          <span class="kpi-foot">{{ sportsWithGames }} {{ sportsWithGames === 1 ? 'deporte' : 'deportes' }} con actividad</span>
+        </div>
       </div>
-    </div>
+      <div class="card kpi">
+        <div class="kpi-icon success"><app-icon name="sparkle" /></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Diferencias vs mercado</span>
+          @if (loading) { <span class="skeleton sk-num"></span> } @else { <span class="kpi-value num">{{ totalPicks }}</span> }
+          <span class="kpi-foot">Donde el modelo y el casino no coinciden</span>
+        </div>
+      </div>
+      <div class="card kpi">
+        <div class="kpi-icon warning"><app-icon name="clock" /></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Próximo partido</span>
+          @if (loading) { <span class="skeleton sk-num"></span> }
+          @else if (nextGame) { <span class="kpi-value num">{{ nextGame.game_time | date: 'h:mm a' : undefined : 'es' }}</span> }
+          @else { <span class="kpi-value">—</span> }
+          <span class="kpi-foot ellipsis">{{ nextGame ? nextGame.away_team + ' @ ' + nextGame.home_team : 'Sin partidos pendientes' }}</span>
+        </div>
+      </div>
+      <div class="card kpi">
+        <div class="kpi-icon muted-icon"><app-icon name="chart" /></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Rendimiento del modelo</span>
+          <span class="kpi-value soon">Pronto</span>
+          <span class="kpi-foot">Se mostrará al liquidar los resultados</span>
+        </div>
+      </div>
+    </section>
 
-    <div class="pick-details" style="margin-top: 2rem;">
-      <div class="detail-box">
-        <span class="label">Expected Value</span>
-        <span class="value text-green">+{{ (dashboardData.top_pick.expected_value * 100).toFixed(1) }}%</span>
-      </div>
-      <div class="detail-box">
-        <span class="label">Best Odds</span>
-        <span class="value">{{ dashboardData.top_pick.best_odds > 0 ? '+' : '' }}{{ dashboardData.top_pick.best_odds }} ({{ dashboardData.top_pick.best_sportsbook }})</span>
-      </div>
-      <div class="detail-box">
-        <span class="label">Value Rating</span>
-        <span class="value text-gradient">⭐ {{ dashboardData.top_pick.value_rating }}/5</span>
-      </div>
-    </div>
-  </div>
-  
-  <ng-template #noPick>
-    <div class="featured-pick glass-panel" style="display: flex; align-items: center; justify-content: center; height: 100%;">
-      <h2 style="color: var(--text-secondary);">No +EV picks found for today</h2>
-    </div>
-  </ng-template>
+    <div class="layout">
+      <!-- Próximos partidos -->
+      <section class="col-main">
+        <div class="section-head">
+          <h2>Próximos partidos</h2>
+          <a routerLink="/picks" class="see-all">Ver todos <app-icon name="arrow-right" /></a>
+        </div>
+        @if (loading) {
+          @for (i of [1, 2]; track i) { <div class="skeleton sk-game"></div> }
+        } @else if (upcoming.length === 0) {
+          <div class="card empty-state">
+            <div class="empty-icon"><app-icon name="calendar" /></div>
+            <h3>No hay partidos por jugar hoy</h3>
+            <p>Vuelve más tarde o revisa otro deporte.</p>
+          </div>
+        } @else {
+          <div class="games">
+            @for (g of upcoming; track g.id) { <app-game-card [game]="g" /> }
+          </div>
+        }
+      </section>
 
-  <!-- Recent Performance -->
-  <div class="performance-chart glass-panel">
-    <div class="chart-header">
-      <h3>Bankroll Trajectory (Last 7 Days)</h3>
+      <!-- Lateral -->
+      <aside class="col-side">
+        <div class="card panel">
+          <h3>Por deporte</h3>
+          <div class="sport-list">
+            @for (s of sports; track s.key) {
+              <a class="sport-row" [routerLink]="['/picks']" [queryParams]="{ sport: s.key }" [class.dim]="!loading && gamesFor(s.key) === 0">
+                <span class="sport-icon"><app-icon [name]="s.icon" /></span>
+                <span class="sport-name">{{ s.label }}</span>
+                @if (picksFor(s.key) > 0) { <span class="chip chip-success num">{{ picksFor(s.key) }} dif.</span> }
+                <span class="sport-count num">{{ loading ? '·' : gamesFor(s.key) }}</span>
+              </a>
+            }
+          </div>
+        </div>
+
+        @if (summary?.top_pick; as tp) {
+          <div class="card panel highlight">
+            <div class="panel-head">
+              <h3>Mayor diferencia con el mercado</h3>
+              <span class="chip">{{ tp.sport }}</span>
+            </div>
+            <p class="tp-matchup">{{ tp.matchup }}</p>
+            <p class="tp-pick">{{ tp.pick_description }}</p>
+            <div class="tp-stats">
+              <div><span class="k">Momio</span><span class="v num">{{ formatAmerican(tp.best_odds) }}</span></div>
+              <div><span class="k">Casino</span><span class="v">{{ tp.best_sportsbook }}</span></div>
+              <div><span class="k">EV estimado</span><span class="v num">{{ (tp.expected_value * 100).toFixed(1) }}%</span></div>
+            </div>
+            <p class="fine"><app-icon name="info" /> Diferencias muy grandes suelen indicar que al modelo le falta información (por ejemplo, bajas). Tómalo como referencia, no como recomendación.</p>
+          </div>
+        }
+      </aside>
     </div>
-    <div class="chart-placeholder">
-      <div class="bar" style="height: 40%"></div>
-      <div class="bar" style="height: 55%"></div>
-      <div class="bar" style="height: 45%"></div>
-      <div class="bar" style="height: 70%"></div>
-      <div class="bar" style="height: 65%"></div>
-      <div class="bar" style="height: 85%"></div>
-      <div class="bar" style="height: 100%; background: var(--accent-green)"></div>
-    </div>
-  </div>
+  }
 </div>

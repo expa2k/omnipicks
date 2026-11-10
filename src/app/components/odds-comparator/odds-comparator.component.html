@@ -1,52 +1,86 @@
-<div class="odds-container">
-  <div class="header-section">
+<div class="page fade-in">
+  <div class="page-header">
     <div>
-      <h1 class="page-title">Comparador de <span class="text-gradient">Líneas (Odds)</span></h1>
-      <p class="subtitle text-secondary">Encuentra el casino que paga más para maximizar tus ganancias a largo plazo.</p>
+      <span class="eyebrow">Herramienta</span>
+      <h1 class="page-title">Modelo vs Mercado</h1>
+      <p class="page-subtitle">Compara la probabilidad del modelo con la del casino (sin su margen). El mercado no se usa para pronosticar: solo sirve de referencia.</p>
     </div>
   </div>
 
-  <div class="table-container glass-panel">
-    <table class="odds-table">
-      <thead>
-        <tr>
-          <th>Partido</th>
-          <th>Mercado</th>
-          <th *ngFor="let book of sportsbooks" class="bookmaker-th">
-            <div class="bookmaker-header">{{ book }}</div>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let game of games" class="table-row">
-          <td>
-            <div class="matchup-cell">
-              <span class="sport-badge">{{ game.sport }}</span>
-              <span class="matchup-teams">{{ game.matchup }}</span>
-              <span class="matchup-date text-secondary">{{ game.time }}</span>
-            </div>
-          </td>
-          <td><span class="market-badge">{{ game.market }}</span></td>
-          
-          <td *ngFor="let book of sportsbooks">
-            <div class="odds-stack" *ngIf="game.odds[book]">
-              <div class="odd-box" [class.best-odd]="game.odds[book].isBestHome">
-                <span class="odd-label">H</span>
-                <span class="odd-val">{{ game.odds[book].home }}</span>
-              </div>
-              <div class="odd-box" *ngIf="game.odds[book].draw" [class.best-odd]="game.odds[book].isBestDraw">
-                <span class="odd-label">D</span>
-                <span class="odd-val">{{ game.odds[book].draw }}</span>
-              </div>
-              <div class="odd-box" [class.best-odd]="game.odds[book].isBestAway">
-                <span class="odd-label">A</span>
-                <span class="odd-val">{{ game.odds[book].away }}</span>
-              </div>
-            </div>
-            <div class="no-odds" *ngIf="!game.odds[book]">-</div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="toolbar">
+    <div class="segmented">
+      @for (s of sports; track s.key) {
+        <button [class.active]="sport === s.key" (click)="sport = s.key">{{ s.label }}</button>
+      }
+    </div>
+    @if (!loading && avgAbsDiff !== null) {
+      <span class="chip">Diferencia media: <strong class="num">{{ (avgAbsDiff * 100).toFixed(1) }} pts</strong></span>
+    }
   </div>
+
+  @if (loading) {
+    <div class="skeleton sk-table"></div>
+  } @else if (error) {
+    <div class="card empty-state">
+      <div class="empty-icon"><app-icon name="alert" /></div>
+      <h3>No se pudo conectar con el servidor</h3>
+      <button class="btn btn-primary" (click)="load()"><app-icon name="refresh" /> Reintentar</button>
+    </div>
+  } @else if (visible.length === 0) {
+    <div class="card empty-state">
+      <div class="empty-icon"><app-icon name="scale" /></div>
+      <h3>No hay líneas del mercado para comparar</h3>
+      <p>Aparecen cuando el casino publica momios de los partidos de hoy.</p>
+    </div>
+  } @else {
+    <div class="card table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Partido</th>
+              <th>Resultado</th>
+              <th class="r">Modelo</th>
+              <th class="r">Mercado</th>
+              <th class="r">Diferencia</th>
+              <th class="r">Momio</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of visible; track row.game.id) {
+              @for (s of row.sides; track s.label; let first = $first; let last = $last) {
+                <tr [class.group-end]="last">
+                  @if (first) {
+                    <td class="match" [attr.rowspan]="row.sides.length">
+                      <div class="match-cell">
+                        <span class="m-icon"><app-icon [name]="sportIcon(row.game.sport)" /></span>
+                        <div>
+                          <div class="m-title">{{ row.game.away_team }} &#64; {{ row.game.home_team }}</div>
+                          <div class="m-sub">{{ row.game.league }} · {{ row.game.game_time | date: 'h:mm a' : undefined : 'es' }} · {{ row.book }}</div>
+                        </div>
+                      </div>
+                    </td>
+                  }
+                  <td class="side">{{ s.label }}</td>
+                  <td class="r num strong">
+                    <div class="bar-cell">
+                      <span class="mini-bar"><span [style.width.%]="s.model * 100"></span></span>
+                      {{ pct(s.model) }}
+                    </div>
+                  </td>
+                  <td class="r num">{{ pct(s.market) }}</td>
+                  <td class="r"><span class="diff num" [ngClass]="diffTone(s.diff)">{{ signed(s.diff * 100) }}</span></td>
+                  <td class="r num muted">{{ formatAmerican(s.odds) }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    @if (withoutLine > 0) {
+      <p class="foot">{{ withoutLine }} {{ withoutLine === 1 ? 'partido no tiene' : 'partidos no tienen' }} línea del mercado todavía.</p>
+    }
+    <p class="foot"><app-icon name="info" /> Diferencias de más de 8 puntos suelen deberse a información que el modelo aún no tiene (bajas, descansos) o a muestras chicas al inicio de temporada.</p>
+  }
 </div>

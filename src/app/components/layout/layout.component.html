@@ -1,59 +1,76 @@
-<div class="app-container">
-  <aside class="sidebar glass-panel">
-    <div class="logo">
-      <span class="logo-icon"></span>
-      <h2 class="text-gradient">OmniPicks</h2>
+<div class="shell">
+  <!-- Fondo para cerrar el menú en celular -->
+  @if (menuOpen) {
+    <div class="scrim" (click)="menuOpen = false"></div>
+  }
+
+  <aside class="sidebar" [class.open]="menuOpen">
+    <div class="brand">
+      <div class="brand-mark">
+        <app-icon name="target" />
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">OmniPicks</span>
+        <span class="brand-tag">Pronósticos con datos</span>
+      </div>
+      <button class="btn btn-icon close-menu" (click)="menuOpen = false" aria-label="Cerrar menú">
+        <app-icon name="close" />
+      </button>
     </div>
 
-    <nav class="nav-menu">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
-        <span class="icon">📊</span> Dashboard
-      </a>
-      
-      <div class="nav-section-title">DEPORTES & LIGAS</div>
-      
-      <a routerLink="/picks" [queryParams]="{sport: 'soccer'}" routerLinkActive="active" class="nav-item sub-item">
-        <span class="icon">⚽</span> Fútbol
-      </a>
-      <a routerLink="/picks" [queryParams]="{sport: 'nba'}" routerLinkActive="active" class="nav-item sub-item">
-        <span class="icon">🏀</span> NBA
-      </a>
-      <a routerLink="/picks" [queryParams]="{sport: 'nfl'}" routerLinkActive="active" class="nav-item sub-item">
-        <span class="icon">🏈</span> NFL
-      </a>
-      <a routerLink="/picks" [queryParams]="{sport: 'mlb'}" routerLinkActive="active" class="nav-item sub-item">
-        <span class="icon">⚾</span> MLB
+    <nav class="nav">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
+        <app-icon name="dashboard" /> <span>Resumen</span>
       </a>
 
-      <div class="nav-section-title">HERRAMIENTAS</div>
+      <div class="nav-section">Deportes</div>
+      <a routerLink="/picks" class="nav-item" [class.active]="activeSport === 'all'">
+        <app-icon name="calendar" /> <span>Todos los partidos</span>
+      </a>
+      @for (s of sports; track s.key) {
+        <a routerLink="/picks" [queryParams]="{ sport: s.key }" class="nav-item" [class.active]="activeSport === s.key">
+          <app-icon [name]="s.icon" /> <span>{{ s.label }}</span>
+        </a>
+      }
 
+      <div class="nav-section">Herramientas</div>
       <a routerLink="/odds" routerLinkActive="active" class="nav-item">
-        <span class="icon">📈</span> Comparador Odds
+        <app-icon name="scale" /> <span>Modelo vs Mercado</span>
       </a>
       <a routerLink="/bankroll" routerLinkActive="active" class="nav-item">
-        <span class="icon">💰</span> Bankroll & Kelly
+        <app-icon name="wallet" /> <span>Bankroll y Kelly</span>
       </a>
     </nav>
-    
-    <div class="user-status">
-      <div class="status-indicator"></div>
-      <span>Sistemas Online</span>
+
+    <div class="sidebar-foot">
+      <span class="status-dot"></span>
+      <span>Datos en vivo</span>
     </div>
   </aside>
 
-  <main class="main-content">
-    <header class="topbar glass-panel">
-      <div class="date-display">
-        {{ currentDate | date:'fullDate' }}
+  <div class="main">
+    <header class="topbar">
+      <button class="btn btn-icon open-menu" (click)="menuOpen = true" aria-label="Abrir menú">
+        <app-icon name="menu" />
+      </button>
+      <div class="topbar-date">
+        <app-icon name="calendar" />
+        <span>{{ today | date: "EEEE d 'de' MMMM" : undefined : 'es' }}</span>
       </div>
       <div class="topbar-actions">
-        <button class="btn btn-outline">Refresh Data</button>
-        <div class="profile-circle">R</div>
+        <button class="btn" (click)="refresh()" title="Volver a cargar los datos">
+          <app-icon name="refresh" /> <span class="hide-sm">Actualizar</span>
+        </button>
+        <button class="btn btn-icon theme-toggle" (click)="theme.toggle()"
+                [attr.aria-label]="theme.theme() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                [title]="theme.theme() === 'dark' ? 'Modo claro' : 'Modo oscuro'">
+          @if (theme.theme() === 'dark') { <app-icon name="sun" /> } @else { <app-icon name="moon" /> }
+        </button>
       </div>
     </header>
-    
-    <div class="content-area">
-      <router-outlet></router-outlet>
-    </div>
-  </main>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
 </div>

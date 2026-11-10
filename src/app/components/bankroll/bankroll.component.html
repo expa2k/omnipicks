@@ -1,78 +1,73 @@
-<div class="bankroll-container">
-  <div class="header-section">
+<div class="page fade-in">
+  <div class="page-header">
     <div>
-      <h1 class="page-title">Gestión de <span class="text-gradient">Bankroll</span></h1>
-      <p class="subtitle text-secondary">Controla tu dinero y calcula tus apuestas matemáticamente usando el Criterio de Kelly.</p>
+      <span class="eyebrow">Herramienta</span>
+      <h1 class="page-title">Bankroll y Kelly</h1>
+      <p class="page-subtitle">Calcula cuánto apostar según tu probabilidad estimada, con el criterio de Kelly.</p>
     </div>
   </div>
 
-  <div class="bankroll-grid">
-    <!-- Resumen -->
-    <div class="summary-panel glass-panel">
-      <h2>Tu Bankroll</h2>
-      <div class="bankroll-input-group">
-        <span class="currency-symbol">$</span>
-        <input type="number" [value]="currentBankroll" (input)="updateBankroll($event)" class="bankroll-input">
-      </div>
-      
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="stat-label">Ganancia Mensual</span>
-          <span class="stat-val text-green">+$245.50</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">ROI Total</span>
-          <span class="stat-val text-green">+12.4%</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Picks Ganados</span>
-          <span class="stat-val">58 / 102</span>
+  <div class="grid">
+    <!-- Calculadora -->
+    <section class="card calc">
+      <h3>Calculadora</h3>
+
+      <div class="field">
+        <label for="bankroll">Tu bankroll</label>
+        <div class="money">
+          <span>$</span>
+          <input id="bankroll" type="number" min="0" [value]="currentBankroll" (input)="updateBankroll($event)">
         </div>
       </div>
-    </div>
 
-    <!-- Kelly Calculator -->
-    <div class="calculator-panel glass-panel">
-      <div class="calc-header">
-        <h2>Calculadora Kelly</h2>
-        <span class="badge">Herramienta</span>
-      </div>
-
-      <div class="calc-body">
-        <div class="input-row">
-          <div class="input-group">
-            <label>Cuota (American Odds)</label>
-            <input type="number" [value]="calcOdds" (input)="updateOdds($event)" placeholder="-110">
-          </div>
-          <div class="input-group">
-            <label>Probabilidad del Modelo (%)</label>
-            <input type="number" [value]="calcProb" (input)="updateProb($event)" placeholder="55">
-          </div>
+      <div class="row">
+        <div class="field">
+          <label for="odds">Momio (americano)</label>
+          <input id="odds" type="number" [value]="calcOdds" (input)="updateOdds($event)" placeholder="-110">
         </div>
-
-        <div class="input-group full">
-          <label>Nivel de Riesgo (Kelly Fraction)</label>
-          <select [value]="kellyFraction" (change)="updateFraction($event)">
-            <option [value]="1.0">Full Kelly (Agresivo - No recomendado)</option>
-            <option [value]="0.5">Half Kelly (Moderado)</option>
-            <option [value]="0.25">Quarter Kelly (Conservador - Sugerido)</option>
-            <option [value]="0.125">Eighth Kelly (Muy Conservador)</option>
-          </select>
-        </div>
-
-        <div class="result-box" [class.no-bet]="suggestedStake === 0">
-          <div class="result-label">Recomendación Matemática</div>
-          
-          <div *ngIf="suggestedStake > 0" class="bet-action">
-            <div class="stake-pct">Apostar el <span class="text-gradient">{{ suggestedStake | number:'1.1-2' }}%</span></div>
-            <div class="stake-amt">${{ suggestedAmount | number:'1.2-2' }}</div>
-          </div>
-          
-          <div *ngIf="suggestedStake === 0" class="bet-action no-edge">
-            NO APOSTAR (Sin valor matemático +EV)
-          </div>
+        <div class="field">
+          <label for="prob">Tu probabilidad (%)</label>
+          <input id="prob" type="number" min="0" max="100" [value]="calcProb" (input)="updateProb($event)" placeholder="55">
         </div>
       </div>
-    </div>
+
+      <div class="field">
+        <label>Nivel de riesgo</label>
+        <div class="segmented full">
+          @for (f of fractions; track f.value) {
+            <button [class.active]="kellyFraction === f.value" (click)="setFraction(f.value)">{{ f.label }}</button>
+          }
+        </div>
+        <span class="hint">{{ fractionHint }}</span>
+      </div>
+    </section>
+
+    <!-- Resultado -->
+    <section class="card result" [class.no-bet]="suggestedStake === 0">
+      <span class="eyebrow">Recomendación</span>
+      @if (suggestedStake > 0) {
+        <div class="big num">{{ suggestedAmount | currency: 'USD' : 'symbol' : '1.2-2' }}</div>
+        <p class="muted">Apostar el <strong class="num">{{ suggestedStake | number: '1.1-2' }}%</strong> de tu bankroll</p>
+      } @else {
+        <div class="big none">No apostar</div>
+        <p class="muted">Con esa probabilidad y ese momio no hay ventaja: el valor esperado es negativo.</p>
+      }
+
+      <dl class="kv">
+        <div><dt>Probabilidad implícita del momio</dt><dd class="num">{{ impliedProb | number: '1.1-1' }}%</dd></div>
+        <div><dt>Tu ventaja</dt><dd class="num" [class.pos]="edge > 0" [class.neg]="edge < 0">{{ edge > 0 ? '+' : '' }}{{ edge | number: '1.1-1' }} pts</dd></div>
+        <div><dt>Valor esperado por $1</dt><dd class="num" [class.pos]="ev > 0" [class.neg]="ev < 0">{{ ev | currency: 'USD' : 'symbol' : '1.3-3' }}</dd></div>
+        <div><dt>Pago si gana</dt><dd class="num">{{ payout | currency: 'USD' : 'symbol' : '1.2-2' }}</dd></div>
+      </dl>
+    </section>
+
+    <!-- Historial -->
+    <section class="card history">
+      <div class="history-icon"><app-icon name="chart" /></div>
+      <div>
+        <h3>Historial de resultados</h3>
+        <p class="muted">Ganancias, ROI y picks acertados aparecerán aquí cuando el sistema liquide automáticamente los resultados de cada partido.</p>
+      </div>
+    </section>
   </div>
 </div>
