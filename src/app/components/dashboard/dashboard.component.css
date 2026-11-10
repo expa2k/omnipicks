@@ -3,9 +3,9 @@
 .kpi { display: flex; gap: 14px; padding: 18px; }
 .kpi-icon { width: 40px; height: 40px; flex-shrink: 0; border-radius: 11px; display: grid; place-items: center; }
 .kpi-icon app-icon { width: 20px; height: 20px; }
-.kpi-icon.accent { background: var(--accent-soft); color: var(--accent); }
+.kpi-icon.accent { background: var(--accent); color: var(--on-accent); }
 .kpi-icon.success { background: var(--success-soft); color: var(--success); }
-.kpi-icon.warning { background: var(--warning-soft); color: var(--warning); }
+.kpi-icon.warning { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
 .kpi-icon.muted-icon { background: var(--surface-2); color: var(--text-3); border: 1px solid var(--border); }
 .kpi-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .kpi-label { font-size: 12.5px; font-weight: 500; color: var(--text-2); }

@@ -16,9 +16,8 @@
 .brand-mark {
   width: 36px; height: 36px; border-radius: 10px;
   display: grid; place-items: center;
-  background: linear-gradient(135deg, var(--accent), #7c3aed);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 .brand-mark app-icon { width: 20px; height: 20px; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.15; flex: 1; }
@@ -41,8 +40,8 @@
 .nav-item app-icon { color: var(--text-3); transition: color 0.15s var(--ease); }
 .nav-item:hover { background: var(--surface-hover); color: var(--text); }
 .nav-item:hover app-icon { color: var(--text-2); }
-.nav-item.active { background: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
-.nav-item.active app-icon { color: var(--accent); }
+.nav-item.active { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.nav-item.active app-icon { color: var(--on-accent); }
 
 .sidebar-foot {
   display: flex; align-items: center; gap: 8px;

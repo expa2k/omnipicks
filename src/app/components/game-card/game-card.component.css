@@ -23,15 +23,11 @@
   width: 40px; height: 40px; border-radius: 11px;
   display: grid; place-items: center;
   font-size: 12px; font-weight: 800; letter-spacing: 0.02em;
-  color: hsl(var(--h) 55% 38%);
-  background: hsl(var(--h) 70% 94%);
-  border: 1px solid hsl(var(--h) 50% 86%);
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
 }
-:root[data-theme="dark"] .avatar {
-  color: hsl(var(--h) 70% 75%);
-  background: hsl(var(--h) 35% 18%);
-  border-color: hsl(var(--h) 30% 26%);
-}
+.team-row.is-fav .avatar { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .team-name { display: flex; flex-direction: column; min-width: 0; }
 .name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .role { font-size: 12px; color: var(--text-3); }
@@ -39,14 +35,14 @@
 .team-score { font-size: 22px; font-weight: 700; text-align: right; color: var(--text-2); letter-spacing: -0.02em; }
 .team-row.is-fav .name { font-weight: 700; }
 .team-row.is-fav .team-score { color: var(--text); }
-.team-row.is-fav .team-prob { color: var(--accent-text); }
+.team-row.is-fav .team-prob { color: var(--text); }
 
 /* ── Probabilidad ───────────────────────── */
 .prob-bar { display: flex; gap: 3px; height: 8px; margin: 14px 0 0; }
 .prob-bar .seg { flex-basis: 0; border-radius: 999px; min-width: 4px; transition: flex-grow 0.4s var(--ease); }
-.seg.away { background: var(--away); }
-.seg.home { background: var(--home); }
-.seg.draw { background: var(--draw); }
+.prob-bar .seg { background: var(--away); }
+.prob-bar .seg.draw { background: var(--draw); }
+.prob-bar .seg.fav { background: var(--home); }
 .draw-note { font-size: 12px; color: var(--text-3); text-align: center; margin-top: 6px; }
 
 /* ── Resumen rápido ─────────────────────── */
@@ -68,7 +64,7 @@
   margin-top: 12px; height: 34px; border: none; background: transparent; border-radius: var(--radius-sm);
   font-size: 13px; font-weight: 600; color: var(--accent-text); cursor: pointer;
 }
-.expand:hover { background: var(--accent-soft); }
+.expand:hover { background: var(--surface-hover); }
 .expand app-icon { width: 16px; height: 16px; transition: transform 0.2s var(--ease); }
 .expand app-icon.rot { transform: rotate(180deg); }
 
@@ -83,8 +79,8 @@
 .block-head h4 { font-size: 13px; font-weight: 700; }
 .legend { display: flex; gap: 6px; }
 .lg { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
-.lg.away { background: var(--away-soft); color: var(--away); }
-.lg.home { background: var(--home-soft); color: var(--home); }
+.lg { background: var(--surface); color: var(--text-2); border: 1px solid var(--border); }
+.lg.fav { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
 .compare { display: flex; flex-direction: column; }
 .c-row {

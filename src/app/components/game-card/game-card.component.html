@@ -42,9 +42,9 @@
   @if (hasPrediction) {
     <!-- Barra de probabilidad -->
     <div class="prob-bar" role="img" [attr.aria-label]="'Probabilidad: visita ' + pct(p.away_win_prob) + ', local ' + pct(p.home_win_prob)">
-      <span class="seg away" [style.flex-grow]="p.away_win_prob"></span>
-      @if (p.draw_prob > 0) { <span class="seg draw" [style.flex-grow]="p.draw_prob"></span> }
-      <span class="seg home" [style.flex-grow]="p.home_win_prob"></span>
+      <span class="seg" [class.fav]="favorite === 'away'" [style.flex-grow]="p.away_win_prob"></span>
+      @if (p.draw_prob > 0) { <span class="seg draw" [class.fav]="favorite === 'draw'" [style.flex-grow]="p.draw_prob"></span> }
+      <span class="seg" [class.fav]="favorite === 'home'" [style.flex-grow]="p.home_win_prob"></span>
     </div>
     @if (p.draw_prob > 0) {
       <div class="draw-note">Empate {{ pct(p.draw_prob) }}</div>
@@ -86,8 +86,8 @@
           <div class="block-head">
             <h4>Comparación</h4>
             <div class="legend">
-              <span class="lg away">{{ initials(game.away_team) }}</span>
-              <span class="lg home">{{ initials(game.home_team) }}</span>
+              <span class="lg" [class.fav]="favorite === 'away'">{{ initials(game.away_team) }}</span>
+              <span class="lg" [class.fav]="favorite === 'home'">{{ initials(game.home_team) }}</span>
             </div>
           </div>
           <div class="compare">

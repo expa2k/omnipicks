@@ -1,7 +1,7 @@
 .title-wrap { display: flex; align-items: center; gap: 14px; }
 .title-icon {
   width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center;
-  background: var(--accent-soft); color: var(--accent);
+  background: var(--accent); color: var(--on-accent);
 }
 .title-icon app-icon { width: 22px; height: 22px; }
 
@@ -14,7 +14,7 @@
   display: inline-grid; place-items: center; min-width: 20px; height: 18px; padding: 0 6px; margin-left: 6px;
   font-size: 11px; font-weight: 700; border-radius: 999px; background: var(--border); color: var(--text-2);
 }
-.segmented button.active .count { background: var(--accent-soft); color: var(--accent-text); }
+.segmented button.active .count { background: var(--accent); color: var(--on-accent); }
 .segmented button { white-space: nowrap; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 16px; align-items: start; }
