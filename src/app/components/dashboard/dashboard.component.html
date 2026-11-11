@@ -47,9 +47,15 @@
       <div class="card kpi">
         <div class="kpi-icon muted-icon"><app-icon name="chart" /></div>
         <div class="kpi-body">
-          <span class="kpi-label">Rendimiento del modelo</span>
-          <span class="kpi-value soon">Pronto</span>
-          <span class="kpi-foot">Se mostrará al liquidar los resultados</span>
+          <span class="kpi-label">Rendimiento del modelo NBA</span>
+          @if (loading) { <span class="skeleton sk-num"></span> }
+          @else if (live) {
+            <span class="kpi-value num">{{ live.winner_pct * 100 | number: '1.0-1' }}%</span>
+            <span class="kpi-foot">Acierto en {{ live.games }} partidos · error medio {{ live.mae_margin | number: '1.1-1' }} pts</span>
+          } @else {
+            <span class="kpi-value soon">Midiendo</span>
+            <span class="kpi-foot">{{ perf?.pending ? perf.pending + ' predicciones esperan resultado' : 'Aún sin partidos terminados' }}</span>
+          }
         </div>
       </div>
     </section>
@@ -90,6 +96,39 @@
               </a>
             }
           </div>
+        </div>
+
+        <!-- Rendimiento en vivo (NBA) -->
+        <div class="card panel">
+          <h3>Modelo NBA en vivo</h3>
+          @if (live) {
+            <div class="perf">
+              <div class="perf-row head"><span></span><span>v2</span>@if (liveV1) {<span>v1</span>}@if (live.vs_market) {<span>Mercado</span>}</div>
+              <div class="perf-row"><span>Acierto de ganador</span><span class="num strong">{{ live.winner_pct * 100 | number: '1.0-1' }}%</span>@if (liveV1) {<span class="num">{{ liveV1.winner_pct * 100 | number: '1.0-1' }}%</span>}@if (live.vs_market) {<span class="num">{{ live.vs_market.market_winner_pct * 100 | number: '1.0-1' }}%</span>}</div>
+              <div class="perf-row"><span>Error del margen</span><span class="num strong">{{ live.mae_margin | number: '1.1-1' }}</span>@if (liveV1) {<span class="num">{{ liveV1.mae_margin | number: '1.1-1' }}</span>}@if (live.vs_market) {<span class="num">{{ live.vs_market.market_mae_margin | number: '1.1-1' }}</span>}</div>
+              <div class="perf-row"><span>Log loss</span><span class="num strong">{{ live.logloss | number: '1.3-3' }}</span>@if (liveV1) {<span class="num">{{ liveV1.logloss | number: '1.3-3' }}</span>}@if (live.vs_market) {<span class="num">—</span>}</div>
+            </div>
+            @if (live.vs_market) {
+              <p class="fine">El modelo quedó más cerca del resultado que la línea en {{ live.vs_market.model_closer_pct * 100 | number: '1.0-0' }}% de {{ live.vs_market.games }} partidos.
+                @if (live.vs_market.ats_hit_pct !== null) { Contra el spread acertó {{ live.vs_market.ats_hit_pct * 100 | number: '1.0-0' }}% ({{ live.vs_market.ats_games }} partidos). }</p>
+            }
+            @if (perf.recent?.length) {
+              <div class="recent">
+                @for (r of perf.recent.slice(0, 6); track r.date + r.matchup) {
+                  <div class="recent-row">
+                    <span class="dot-res" [class.ok]="r.hit"></span>
+                    <span class="ellipsis">{{ r.matchup }}</span>
+                    <span class="num faint">{{ r.final }}</span>
+                  </div>
+                }
+              </div>
+            }
+          } @else {
+            <p class="fine">Se guarda la última predicción antes de cada partido y se compara con el resultado. {{ perf?.pending ? 'Hay ' + perf.pending + ' esperando resultado.' : '' }}</p>
+          }
+          @if (perf?.backtest; as bt) {
+            <p class="fine">Backtest de 3 temporadas ({{ bt.games | number }} partidos): acierto {{ bt.winner_pct * 100 | number: '1.0-1' }}%, error del margen {{ bt.mae_margin | number: '1.1-1' }} pts, log loss {{ bt.logloss | number: '1.3-3' }}.</p>
+          }
         </div>
 
         @if (summary?.top_pick; as tp) {

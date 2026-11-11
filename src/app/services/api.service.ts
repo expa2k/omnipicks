@@ -24,6 +24,10 @@ export class ApiService {
     return this.http.get(url);
   }
 
+  getNbaPerformance(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/predictions/nba/performance`);
+  }
+
   getGamePredictions(sport?: string): Observable<any> {
     const url = sport
       ? `${this.baseUrl}/predictions/games?sport=${sport}`

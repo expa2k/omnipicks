@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { ApiService } from '../../services/api.service';
 import { GameCardComponent } from '../game-card/game-card.component';
 import { IconComponent } from '../icon/icon.component';
@@ -27,6 +27,11 @@ export class DashboardComponent implements OnInit {
   totalPicks = 0;
   sportsWithGames = 0;
   nextGame: any = null;
+  perf: any = null;
+
+  /** Rendimiento en vivo del modelo NBA (predicción previa a cada partido contra el resultado). */
+  get live() { return this.perf?.models?.nba_players_v2 || null; }
+  get liveV1() { return this.perf?.models?.nba_possessions_v1 || null; }
 
   readonly sports = SPORTS;
   readonly formatAmerican = formatAmerican;
@@ -39,9 +44,14 @@ export class DashboardComponent implements OnInit {
   load() {
     this.loading = true;
     this.error = false;
-    forkJoin({ summary: this.api.getDashboardSummary(), games: this.api.getGamePredictions() }).subscribe({
-      next: ({ summary, games }: any) => {
+    forkJoin({
+      summary: this.api.getDashboardSummary(),
+      games: this.api.getGamePredictions(),
+      perf: this.api.getNbaPerformance().pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: ({ summary, games, perf }: any) => {
         this.summary = summary;
+        this.perf = perf;
         const list = (games.games || []).slice().sort((a: any, b: any) => (a.game_time || '').localeCompare(b.game_time || ''));
         this.upcoming = list.slice(0, 4);
         this.nextGame = list[0] || null;

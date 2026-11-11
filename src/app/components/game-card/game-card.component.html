@@ -205,6 +205,9 @@
                         <div class="pick-main">
                           <span class="pick-name">{{ i.player }}@if (i.position) {<span class="faint pos"> · {{ i.position }}</span>}</span>
                           <span class="faint">{{ statusLabel(i.status) }}{{ i.play_probability > 0 && i.play_probability < 1 ? ' (' + pct(i.play_probability) + ' de jugar)' : '' }} · jugaría ~{{ i.usual_minutes | number: '1.0-0' }} min</span>
+                          @if (i.injury || i.source) {
+                            <span class="faint">{{ i.injury }}{{ i.injury && i.source ? ' · ' : '' }}{{ sourceLabel(i) ? 'Fuente: ' + sourceLabel(i) : '' }}</span>
+                          }
                           <span class="faint">Ataque {{ signed(i.o_rating) }} · Defensa {{ signed(i.d_rating) }} (por 100 posesiones, sobre el promedio)</span>
                           @if (onOffLabel(i)) {
                             <span class="faint">{{ onOffLabel(i) }}</span>

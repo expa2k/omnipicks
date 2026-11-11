@@ -107,9 +107,13 @@ export class GameCardComponent implements OnChanges {
   statusLabel(s: string): string {
     const map: Record<string, string> = {
       'Out For Season': 'Fuera (temporada)', Out: 'Fuera', Doubtful: 'Duda', Questionable: 'Duda',
-      'Day-To-Day': 'Día a día', Probable: 'Probable',
+      'Day-To-Day': 'Día a día', Probable: 'Probable', 'Rest-B2B': 'Posible descanso (2º día seguido)',
     };
     return map[s] || s;
+  }
+
+  sourceLabel(i: any): string {
+    return ({ nba: 'reporte oficial NBA', espn: 'ESPN', modelo: 'historial del jugador' } as Record<string, string>)[i.source] || '';
   }
 
   minutesTo(i: any): string {
