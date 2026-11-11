@@ -168,6 +168,34 @@
           </div>
         }
 
+        <!-- Bajas y su impacto (NBA v2) -->
+        @if (injuries.length) {
+          <div class="block">
+            <div class="block-head"><h4>Bajas</h4></div>
+            @for (side of ['away', 'home']; track side) {
+              @let list = injuriesFor(side);
+              @if (list.length) {
+                <div class="inj-team">{{ side === 'home' ? game.home_team : game.away_team }}</div>
+                <div class="picks">
+                  @for (i of list; track i.player) {
+                    <div class="pick">
+                      <div class="pick-main">
+                        <span class="pick-name">{{ i.player }}</span>
+                        <span class="faint">{{ statusLabel(i.status) }}{{ i.play_probability > 0 && i.play_probability < 1 ? ' (' + pct(i.play_probability) + ' de jugar)' : '' }} · {{ i.usual_minutes | number: '1.0-0' }} min por partido</span>
+                        @if (i.minutes_to?.length) {
+                          <span class="faint">Sus minutos: {{ minutesTo(i) }}</span>
+                        }
+                      </div>
+                      <span class="chip num" [ngClass]="i.impact_if_out <= -1 ? 'chip-danger' : ''">{{ signed(i.impact_if_out) }} pts</span>
+                    </div>
+                  }
+                </div>
+              }
+            }
+            <p class="fine">Puntos de margen que pierde su equipo si no juega. La predicción ya los descuenta según su probabilidad de jugar.</p>
+          </div>
+        }
+
         <!-- Contexto -->
         @if (info.length || simInfo.length) {
           <div class="block">

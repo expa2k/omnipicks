@@ -141,3 +141,6 @@
   .hide-sm { display: none; }
   .lineup-grid { grid-template-columns: 1fr; }
 }
+
+.inj-team { font-size: 12px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; margin: 10px 0 6px; }
+.inj-team:first-of-type { margin-top: 0; }

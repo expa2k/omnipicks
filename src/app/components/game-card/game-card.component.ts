@@ -93,8 +93,27 @@ export class GameCardComponent implements OnChanges {
     if (s.num_simulations) rows.push({ label: 'Simulaciones', value: Number(s.num_simulations).toLocaleString('es-MX') });
     if (s.expected_possessions) rows.push({ label: 'Posesiones esperadas', value: String(s.expected_possessions) });
     if (s.home_court_pts) rows.push({ label: 'Ventaja de local', value: `${s.home_court_pts} pts` });
+    if (s.margin_range_80) rows.push({ label: 'Margen (80% de las veces)', value: `${signed(s.margin_range_80[0])} a ${signed(s.margin_range_80[1])}` });
     if (this.p?.model_name) rows.push({ label: 'Modelo', value: this.p.model_name });
     return rows;
+  }
+
+  /** Bajas con su impacto (modelo NBA v2): puntos de margen que pierde su equipo si no juega. */
+  get injuries(): any[] {
+    return (this.p?.simulation_details?.injuries || []).filter((i: any) => i.usual_minutes >= 8 || Math.abs(i.impact_if_out) >= 0.5);
+  }
+  injuriesFor(side: string): any[] { return this.injuries.filter((i) => i.team === side); }
+
+  statusLabel(s: string): string {
+    const map: Record<string, string> = {
+      'Out For Season': 'Fuera (temporada)', Out: 'Fuera', Doubtful: 'Duda', Questionable: 'Duda',
+      'Day-To-Day': 'Día a día', Probable: 'Probable',
+    };
+    return map[s] || s;
+  }
+
+  minutesTo(i: any): string {
+    return (i.minutes_to || []).map((m: any) => `${m.player} (+${Math.round(m.minutes)})`).join(', ');
   }
 
   toggle() { this.expanded = !this.expanded; }
