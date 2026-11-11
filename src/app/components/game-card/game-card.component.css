@@ -142,5 +142,14 @@
   .lineup-grid { grid-template-columns: 1fr; }
 }
 
-.inj-team { font-size: 12px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; margin: 10px 0 6px; }
+.inj-team { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; margin: 12px 0 6px; }
+.inj-loss { text-transform: none; letter-spacing: 0; color: var(--danger); font-weight: 600; }
+.pick.inj { align-items: flex-start; }
+.pick.inj .pick-main { gap: 2px; }
+.pick-name .pos { font-weight: 500; }
+.chip .pm { opacity: .7; font-weight: 500; }
 .inj-team:first-of-type { margin-top: 0; }
+
+.block.injuries { grid-column: 1 / -1; }
+.inj-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.inj-col .inj-team:first-child { margin-top: 0; }

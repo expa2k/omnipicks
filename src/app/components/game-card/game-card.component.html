@@ -168,34 +168,6 @@
           </div>
         }
 
-        <!-- Bajas y su impacto (NBA v2) -->
-        @if (injuries.length) {
-          <div class="block">
-            <div class="block-head"><h4>Bajas</h4></div>
-            @for (side of ['away', 'home']; track side) {
-              @let list = injuriesFor(side);
-              @if (list.length) {
-                <div class="inj-team">{{ side === 'home' ? game.home_team : game.away_team }}</div>
-                <div class="picks">
-                  @for (i of list; track i.player) {
-                    <div class="pick">
-                      <div class="pick-main">
-                        <span class="pick-name">{{ i.player }}</span>
-                        <span class="faint">{{ statusLabel(i.status) }}{{ i.play_probability > 0 && i.play_probability < 1 ? ' (' + pct(i.play_probability) + ' de jugar)' : '' }} · {{ i.usual_minutes | number: '1.0-0' }} min por partido</span>
-                        @if (i.minutes_to?.length) {
-                          <span class="faint">Sus minutos: {{ minutesTo(i) }}</span>
-                        }
-                      </div>
-                      <span class="chip num" [ngClass]="i.impact_if_out <= -1 ? 'chip-danger' : ''">{{ signed(i.impact_if_out) }} pts</span>
-                    </div>
-                  }
-                </div>
-              }
-            }
-            <p class="fine">Puntos de margen que pierde su equipo si no juega. La predicción ya los descuenta según su probabilidad de jugar.</p>
-          </div>
-        }
-
         <!-- Contexto -->
         @if (info.length || simInfo.length) {
           <div class="block">
@@ -211,6 +183,50 @@
           </div>
         }
       </div>
+
+      <!-- Bajas y su impacto (NBA v2) -->
+      @if (injuries.length) {
+        <div class="block injuries">
+          <div class="block-head"><h4>Bajas</h4></div>
+          <div class="inj-grid">
+            @for (side of ['away', 'home']; track side) {
+              @let list = injuriesFor(side);
+              @if (list.length) {
+                <div class="inj-col">
+                  <div class="inj-team">
+                    <span>{{ side === 'home' ? game.home_team : game.away_team }}</span>
+                    @if (teamLoss(side) !== null && teamLoss(side)! <= -0.1) {
+                      <span class="inj-loss num">{{ signed(teamLoss(side)) }} pts hoy por bajas</span>
+                    }
+                  </div>
+                  <div class="picks">
+                    @for (i of list; track i.player) {
+                      <div class="pick inj">
+                        <div class="pick-main">
+                          <span class="pick-name">{{ i.player }}@if (i.position) {<span class="faint pos"> · {{ i.position }}</span>}</span>
+                          <span class="faint">{{ statusLabel(i.status) }}{{ i.play_probability > 0 && i.play_probability < 1 ? ' (' + pct(i.play_probability) + ' de jugar)' : '' }} · jugaría ~{{ i.usual_minutes | number: '1.0-0' }} min</span>
+                          <span class="faint">Ataque {{ signed(i.o_rating) }} · Defensa {{ signed(i.d_rating) }} (por 100 posesiones, sobre el promedio)</span>
+                          @if (onOffLabel(i)) {
+                            <span class="faint">{{ onOffLabel(i) }}</span>
+                          }
+                          @if (i.minutes_to?.length) {
+                            <span class="faint">Sus minutos: {{ minutesTo(i) }}</span>
+                          }
+                        </div>
+                        <span class="chip num" [ngClass]="i.impact_if_out <= -1 ? 'chip-danger' : ''"
+                              [attr.title]="'Rango probable: ' + signed(i.impact_if_out - i.impact_sd) + ' a ' + signed(i.impact_if_out + i.impact_sd)">
+                          {{ signed(i.impact_if_out) }}<span class="pm"> ±{{ i.impact_sd | number: '1.1-1' }}</span> pts
+                        </span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            }
+          </div>
+          <p class="fine">El número de la derecha son los puntos de margen que pierde su equipo si no juega, ya contando quién se queda con sus minutos. La predicción los descuenta según su probabilidad de jugar. "Con él / sin él en cancha" es lo observado esta temporada, sin ajustar por rivales ni compañeros.</p>
+        </div>
+      }
 
       <!-- Alineaciones (fútbol) -->
       @if (game.lineups && isSoccer) {

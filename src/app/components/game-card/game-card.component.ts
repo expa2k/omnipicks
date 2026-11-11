@@ -113,7 +113,20 @@ export class GameCardComponent implements OnChanges {
   }
 
   minutesTo(i: any): string {
-    return (i.minutes_to || []).map((m: any) => `${m.player} (+${Math.round(m.minutes)})`).join(', ');
+    return (i.minutes_to || []).map((m: any) => `${m.player}${m.position ? ' · ' + m.position : ''} (+${Math.round(m.minutes)})`).join(', ');
+  }
+
+  /** Puntos de margen que pierde el equipo hoy por sus bajas (contra su plantilla completa). */
+  teamLoss(side: string): number | null {
+    const v = this.p?.simulation_details?.teams?.[side]?.points_lost;
+    return v === undefined || v === null ? null : v;
+  }
+
+  onOffLabel(i: any): string | null {
+    const o = i.on_off;
+    if (!o || (o.on_net === null && o.off_net === null)) return null;
+    const f = (v: number | null) => (v === null ? '—' : signed(v));
+    return `Con él en cancha ${f(o.on_net)} · sin él ${f(o.off_net)} (por 100 posesiones, ${o.on_poss} pos. con él)`;
   }
 
   toggle() { this.expanded = !this.expanded; }
