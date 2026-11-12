@@ -40,7 +40,7 @@
 
 .from-pick { display: flex; gap: 6px; align-items: flex-start; font-size: 12.5px; color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; margin: 0 0 14px; }
 .from-pick app-icon { width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px; }
-.history-live { grid-column: 1 / -1; padding: 20px; }
+.history-live { padding: 20px; margin-top: 20px; }
 .hl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .hl-head h3 { margin: 0; }
 .hl-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 14px 0; }

@@ -216,6 +216,9 @@
                     <span class="pick-name">{{ pk.pick_description }}</span>
                     <span class="faint">{{ marketLabel(pk.market) }} · {{ pk.best_sportsbook }} {{ formatAmerican(pk.best_odds) }}
                       @if (pk.model_probability !== null && pk.implied_probability !== null) { · modelo {{ pct(pk.model_probability) }} vs casino {{ pct(pk.implied_probability) }} }</span>
+                    @if (pk.tier === 'revisar') {
+                      <span class="faint warn-text">{{ pk.model_edge * 100 | number: '1.0-0' }} pts de diferencia: más de lo que suele separar a un buen modelo del mercado. Antes de tomarlo, revisa bajas y noticias.</span>
+                    }
                   </div>
                   @if (pk.tier === 'recomendado') {
                     <div class="pick-actions">
