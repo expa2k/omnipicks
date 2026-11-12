@@ -235,6 +235,9 @@
                     <span class="faint mp-market">{{ m.name }}</span>
                     <span class="pick-name">{{ m.pick.label }}</span>
                     <span class="faint">Modelo {{ pct(m.pick.prob) }}@if (m.pick.implied !== null) { · casino {{ pct(m.pick.implied) }} ({{ formatAmerican(m.pick.odds) }}{{ m.pick.odds_approx ? ', aprox.' : '' }})}@if (m.pick.edge !== null) { · valor {{ signed(m.pick.edge * 100) }} pts}</span>
+                    @if (isNflV2 && m.pick.diff_pts !== undefined && m.pick.diff_pts !== null) {
+                      <span class="faint">El modelo ve {{ m.pick.diff_pts | number: '1.1-1' }} pts a favor de este lado respecto a la línea; en el backtest reciente esa diferencia casi no predijo el resultado.</span>
+                    }
                     @if (m.pick.tier === 'revisar') {
                       <span class="faint warn-text">Diferencia demasiado grande: probablemente al modelo le falta información. Revisa bajas y noticias.</span>
                     }
