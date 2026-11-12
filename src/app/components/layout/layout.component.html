@@ -55,7 +55,8 @@
       </button>
       <div class="topbar-date">
         <app-icon name="calendar" />
-        <span>{{ today | date: "EEEE d 'de' MMMM" : undefined : 'es' }}</span>
+        <span>{{ headerDate | date: "EEEE d 'de' MMMM" : undefined : 'es' }}</span>
+        @if (!headerIsToday) { <span class="chip date-chip">próximos partidos</span> }
       </div>
       <div class="topbar-actions">
         <button class="btn" (click)="refresh()" title="Volver a cargar los datos">

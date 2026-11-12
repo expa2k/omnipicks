@@ -1,15 +1,16 @@
 import { Component, HostBinding, Input, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { IconComponent } from '../icon/icon.component';
 import {
   americanToProb, confidenceLevel, devig, FactorRow, formatAmerican, formatValue, InfoRow,
-  initials, pct, signed, splitFactors, sportIcon, teamHue,
+  initials, injuryReason, pct, signed, splitFactors, sportIcon, teamHue,
 } from '../../utils/format';
 
 @Component({
   selector: 'app-game-card',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, RouterModule, IconComponent],
   templateUrl: './game-card.component.html',
   styleUrl: './game-card.component.css',
 })
@@ -163,6 +164,90 @@ export class GameCardComponent implements OnChanges {
     if (!o || (o.on_net === null && o.off_net === null)) return null;
     const f = (v: number | null) => (v === null ? '—' : signed(v));
     return `Con él en cancha ${f(o.on_net)} · sin él ${f(o.off_net)} (por 100 posesiones, ${o.on_poss} pos. con él)`;
+  }
+
+  // ── Modelo NBA v2 ────────────────────────────────────────────────
+  get sd() { return this.p?.simulation_details || {}; }
+  get isV2(): boolean { return this.sd.model === 'nba_players_v2'; }
+  get result() { return this.game?.result || null; }
+  logo(side: string): string | null { return side === 'home' ? this.game?.home_logo : this.game?.away_logo; }
+
+  /** Jugadores con duda real (ni fuera ni confirmados). */
+  get uncertainCount(): number {
+    return (this.sd.injuries || []).filter((i: any) => i.status !== 'Rest-B2B' && i.play_probability > 0 && i.play_probability < 1).length;
+  }
+
+  /** Una frase: quién gana según el modelo y según el mercado. */
+  get verdict(): { model: string; market: string | null; gap: number | null } | null {
+    const p = this.p;
+    if (!p || p.predicted_spread === null || p.predicted_spread === undefined) return null;
+    const s = p.predicted_spread;
+    const favName = s <= 0 ? this.game.home_team : this.game.away_team;
+    const prob = s <= 0 ? p.home_win_prob : p.away_win_prob;
+    const model = Math.abs(s) < 0.5 ? `parejo (${pct(Math.max(p.home_win_prob, p.away_win_prob))})`
+      : `${initials(favName)} gana por ${Math.abs(s).toFixed(1)} (${pct(prob)})`;
+    const sp = this.game?.odds?.spread?.home_line;
+    let market: string | null = null;
+    if (sp !== null && sp !== undefined) {
+      market = Math.abs(sp) < 0.5 ? 'parejo' : `${initials(sp < 0 ? this.game.home_team : this.game.away_team)} por ${Math.abs(sp).toFixed(1)}`;
+    } else if (this.marketFavorite) {
+      const mp = this.marketFavorite === 'home' ? this.market.home : this.market.away;
+      market = `${initials(this.marketFavorite === 'home' ? this.game.home_team : this.game.away_team)} favorito (${pct(mp)})`;
+    }
+    const gap = this.spreadGap;
+    return { model, market, gap: gap === null ? null : Math.abs(gap) };
+  }
+
+  /** Factores del partido que de verdad usa el modelo v2, en palabras. */
+  get whyRows(): { label: string; away: string; home: string; hint?: string }[] {
+    const c = this.sd.context || {};
+    const t = this.sd.teams || {};
+    const rows: { label: string; away: string; home: string; hint?: string }[] = [];
+    const yn = (v: any) => (v ? 'Sí' : 'No');
+    if (t.home && t.away) {
+      rows.push({ label: 'Fuerza de la plantilla hoy', away: signed(t.away.strength_today), home: signed(t.home.strength_today),
+                  hint: 'Puntos por 100 posesiones sobre un equipo promedio, con los minutos esperados de hoy' });
+      rows.push({ label: 'Pierde por bajas', away: signed(t.away.points_lost), home: signed(t.home.points_lost),
+                  hint: 'Puntos de margen contra su plantilla completa' });
+    }
+    if ('b2b_h' in c) rows.push({ label: '2º partido en 2 días', away: yn(c.b2b_a), home: yn(c.b2b_h) });
+    if ('three_in_four_h' in c) rows.push({ label: '3 partidos en 4 noches', away: yn(c.three_in_four_a), home: yn(c.three_in_four_h) });
+    if ('travel_a' in c) rows.push({ label: 'Viaje desde su último partido', away: `${Math.round(c.travel_a * 1000)} km`, home: `${Math.round(c.travel_h * 1000)} km` });
+    return rows;
+  }
+
+  get whyNotes(): string[] {
+    const c = this.sd.context || {};
+    const notes: string[] = [];
+    if (c.rest_diff) notes.push(`${initials(c.rest_diff > 0 ? this.game.home_team : this.game.away_team)} llega con ${Math.abs(c.rest_diff)} día(s) más de descanso.`);
+    if (c.east_a >= 2) notes.push(`${initials(this.game.away_team)} viaja ${c.east_a} husos horarios al este.`);
+    if (c.altitude_visit) notes.push(`${initials(this.game.away_team)} juega en altura.`);
+    if (c.early_season) notes.push('Inicio de temporada: hay más incertidumbre.');
+    if (c.playoffs) notes.push('Playoffs: menos puntos y más minutos para los titulares.');
+    const adj = this.sd.context_adjustment;
+    if (adj && Math.abs(adj.margin) >= 0.5) notes.push(`El contexto mueve el margen ${signed(adj.margin)} pts hacia ${adj.margin > 0 ? initials(this.game.home_team) : initials(this.game.away_team)}.`);
+    return notes;
+  }
+
+  get v2Info(): { label: string; value: string }[] {
+    const s = this.sd;
+    const rows: { label: string; value: string }[] = [];
+    if (s.most_likely_score) rows.push({ label: 'Marcador más probable', value: `${initials(this.game.away_team)} ${s.most_likely_score[1]} – ${s.most_likely_score[0]} ${initials(this.game.home_team)}` });
+    if (s.margin_range_80) rows.push({ label: 'Margen del local (80% de las veces)', value: `${signed(s.margin_range_80[0])} a ${signed(s.margin_range_80[1])}` });
+    if (s.total_range_80) rows.push({ label: 'Total (80% de las veces)', value: `${Math.round(s.total_range_80[0])} a ${Math.round(s.total_range_80[1])}` });
+    if (s.availability_scenarios > 1) rows.push({ label: 'Escenarios de quién juega', value: String(s.availability_scenarios) });
+    if (s.num_simulations) rows.push({ label: 'Simulaciones', value: Number(s.num_simulations).toLocaleString('es-MX') });
+    return rows;
+  }
+
+  // ── Bajas compactas ──────────────────────────────────────────────
+  openInj = new Set<string>();
+  toggleInj(name: string) { this.openInj.has(name) ? this.openInj.delete(name) : this.openInj.add(name); }
+  reason(i: any): string { return i.status === 'Rest-B2B' ? '' : injuryReason(i.injury); }
+
+  bankrollParams(pk: any) {
+    return { odds: pk.best_odds, prob: pk.model_probability !== null ? Math.round(pk.model_probability * 1000) / 10 : null,
+             pick: `${pk.pick_description} · ${this.game.away_team} @ ${this.game.home_team}` };
   }
 
   toggle() { this.expanded = !this.expanded; }

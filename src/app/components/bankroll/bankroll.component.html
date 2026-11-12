@@ -11,6 +11,9 @@
     <!-- Calculadora -->
     <section class="card calc">
       <h3>Calculadora</h3>
+      @if (fromPick) {
+        <p class="from-pick"><app-icon name="sparkle" /><span>Llenado con la recomendación <strong>{{ fromPick }}</strong>: momio del casino y probabilidad del modelo.</span></p>
+      }
 
       <div class="field">
         <label for="bankroll">Tu bankroll</label>
@@ -61,13 +64,36 @@
       </dl>
     </section>
 
-    <!-- Historial -->
-    <section class="card history">
-      <div class="history-icon"><app-icon name="chart" /></div>
-      <div>
-        <h3>Historial de resultados</h3>
-        <p class="muted">Ganancias, ROI y picks acertados aparecerán aquí cuando el sistema liquide automáticamente los resultados de cada partido.</p>
+    <!-- Historial (modelo NBA en vivo) -->
+    <section class="card history-live">
+      <div class="hl-head">
+        <h3>Historial del modelo NBA</h3>
+        <a class="link" routerLink="/">Ver en el resumen</a>
       </div>
+      @if (live) {
+        <div class="hl-stats">
+          <div><span class="k">Partidos</span><span class="v num">{{ live.games }}</span></div>
+          <div><span class="k">Acierto de ganador</span><span class="v num">{{ live.winner_pct * 100 | number: '1.0-1' }}%</span></div>
+          <div><span class="k">Error del margen</span><span class="v num">{{ live.mae_margin | number: '1.1-1' }} pts</span></div>
+          @if (live.vs_market?.ats_hit_pct !== null && live.vs_market?.ats_hit_pct !== undefined) {
+            <div><span class="k">Contra el spread</span><span class="v num">{{ live.vs_market.ats_hit_pct * 100 | number: '1.0-0' }}%</span></div>
+          }
+        </div>
+        @if (perf?.recent?.length) {
+          <div class="hl-recent">
+            @for (r of perf.recent.slice(0, 8); track r.date + r.matchup) {
+              <div class="hl-row">
+                <span class="dot-res" [class.ok]="r.hit"></span>
+                <span class="ellipsis">{{ r.matchup }}</span>
+                <span class="num faint">{{ r.final }}</span>
+              </div>
+            }
+          </div>
+        }
+        <p class="fine">Predicción guardada antes de cada partido contra el resultado real. Con pocos partidos estas cifras cambian mucho; hacen falta ~150 para sacar conclusiones.@if (liveV1) { Modelo anterior: {{ liveV1.winner_pct * 100 | number: '1.0-0' }}% de acierto.}</p>
+      } @else {
+        <p class="muted">Todavía no hay partidos terminados. Se guarda la predicción de cada partido antes de que empiece y aquí aparece el resultado.{{ perf?.pending ? ' Hay ' + perf.pending + ' esperando resultado.' : '' }}</p>
+      }
     </section>
   </div>
 </div>

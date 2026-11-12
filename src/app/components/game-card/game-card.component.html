@@ -13,9 +13,12 @@
         <span class="venue hide-sm"><app-icon name="pin" /> {{ game.venue }}</span>
       }
     </div>
-    @if (hasPrediction) {
-      <span class="chip" [ngClass]="confidence.tone ? 'chip-' + confidence.tone : ''"
-            title="Según cuántos datos hay de ambos equipos (no según qué tan parejo es el partido)">Confianza {{ confidence.label | lowercase }}</span>
+    @if (result) {
+      <span class="chip" [ngClass]="result.hit ? 'chip-success' : 'chip-danger'">Final · {{ result.hit ? 'acertó' : 'falló' }}</span>
+    } @else if (game.status === 'live') {
+      <span class="chip chip-danger">En vivo</span>
+    } @else if (hasPrediction && uncertainCount > 0) {
+      <span class="chip chip-warning" title="Jugadores en duda: la predicción mezcla los escenarios en que juegan y en que no">{{ uncertainCount }} en duda</span>
     }
   </header>
 
@@ -26,12 +29,19 @@
       @let prob = side === 'home' ? p?.home_win_prob : p?.away_win_prob;
       @let score = side === 'home' ? p?.predicted_home_score : p?.predicted_away_score;
       <div class="team-row" [class.is-fav]="hasPrediction && favorite === side">
-        <span class="avatar" [style.--h]="teamHue(name)">{{ initials(name) }}</span>
+        @if (logo(side)) {
+          <img class="avatar logo" [src]="logo(side)" [alt]="name" loading="lazy">
+        } @else {
+          <span class="avatar" [style.--h]="teamHue(name)">{{ initials(name) }}</span>
+        }
         <div class="team-name">
           <span class="name">{{ name }}</span>
           <span class="role">{{ side === 'home' ? 'Local' : 'Visita' }}{{ factors?.[side + '_record'] ? ' · ' + factors[side + '_record'] : '' }}@if (marketFavorite === side) {<span class="fav-mkt" title="Favorito según el casino"> · favorito del mercado</span>}</span>
         </div>
-        @if (hasPrediction) {
+        @if (result) {
+          <span class="team-prob num faint">{{ score | number: '1.0-0' }}</span>
+          <span class="team-score num" [class.won]="result.winner === side">{{ side === 'home' ? result.home_score : result.away_score }}</span>
+        } @else if (hasPrediction) {
           <span class="team-prob num">{{ pct(prob) }}</span>
           <span class="team-score num">{{ score | number: scoreDigits }}</span>
         }
@@ -50,12 +60,25 @@
       <div class="draw-note">Empate {{ pct(p.draw_prob) }}</div>
     }
 
+    <!-- En una frase -->
+    @if (result) {
+      <p class="verdict">Final: {{ initials(game.away_team) }} {{ result.away_score }} – {{ result.home_score }} {{ initials(game.home_team) }}.
+        El modelo {{ result.hit ? 'acertó al ganador' : 'no acertó al ganador' }}@if (result.margin_error !== undefined) { (se equivocó por {{ result.margin_error | number: '1.0-1' }} pts en el margen)}.</p>
+    } @else if (verdict) {
+      @let v = verdict!;
+      <p class="verdict">
+        <span><strong>Modelo:</strong> {{ v.model }}</span>
+        @if (v.market) { <span><strong>Mercado:</strong> {{ v.market }}</span> }
+        @if (v.gap !== null && v.gap >= 5) { <span class="chip chip-warning" title="Diferencias así suelen deberse a algo que el modelo no sabe">difieren {{ v.gap | number: '1.0-1' }} pts</span> }
+      </p>
+    }
+
     <!-- Resumen rápido -->
     <div class="quick">
-      <div class="stat"><span class="k">{{ isSoccer ? 'Diferencia' : 'Spread' }}</span><span class="v num">{{ spreadLabel }}</span></div>
-      <div class="stat"><span class="k">Total</span><span class="v num">{{ p.predicted_total | number: '1.1-1' }}</span></div>
+      <div class="stat"><span class="k">{{ isSoccer ? 'Diferencia' : 'Margen (modelo)' }}</span><span class="v num">{{ spreadLabel }}</span></div>
+      <div class="stat"><span class="k">Total (modelo)</span><span class="v num">{{ p.predicted_total | number: '1.1-1' }}</span></div>
       @if (marketLine) {
-        <div class="stat"><span class="k">Mercado</span><span class="v num">{{ marketLine }}</span></div>
+        <div class="stat"><span class="k">Mercado</span><span class="v num">{{ marketLine }}{{ marketTotal !== null ? ' · ' + marketTotal : '' }}</span></div>
       }
       @if (recommended.length) {
         <div class="stat"><span class="k">Recomendación</span><span class="v"><span class="chip chip-success">{{ recommended.length }}</span></span></div>
@@ -82,8 +105,34 @@
   <!-- Análisis detallado -->
   @if (expanded) {
     <section class="details fade-in">
+      <!-- Por qué este pronóstico (NBA v2) -->
+      @if (isV2) {
+        <div class="block">
+          <div class="block-head">
+            <h4>Por qué este pronóstico</h4>
+            <div class="legend">
+              <span class="lg" [class.fav]="favorite === 'away'">{{ initials(game.away_team) }}</span>
+              <span class="lg" [class.fav]="favorite === 'home'">{{ initials(game.home_team) }}</span>
+            </div>
+          </div>
+          <div class="compare">
+            @for (r of whyRows; track r.label) {
+              <div class="c-row" [attr.title]="r.hint || null">
+                <span class="c-val num">{{ r.away }}</span>
+                <span class="c-label">{{ r.label }}</span>
+                <span class="c-val num right">{{ r.home }}</span>
+              </div>
+            }
+          </div>
+          @if (whyNotes.length) {
+            <ul class="why-notes">
+              @for (n of whyNotes; track n) { <li>{{ n }}</li> }
+            </ul>
+          }
+          <p class="fine">La fuerza sale de sumar el rating de cada jugador por los minutos que se espera que juegue hoy.</p>
+        </div>
+      } @else if (pairs.length) {
       <!-- Comparación de equipos -->
-      @if (pairs.length) {
         <div class="block">
           <div class="block-head">
             <h4>Comparación</h4>
@@ -169,7 +218,10 @@
                       @if (pk.model_probability !== null && pk.implied_probability !== null) { · modelo {{ pct(pk.model_probability) }} vs casino {{ pct(pk.implied_probability) }} }</span>
                   </div>
                   @if (pk.tier === 'recomendado') {
-                    <span class="chip chip-success num" title="Ventaja moderada sobre el mercado">+{{ pk.model_edge * 100 | number: '1.0-1' }} pts</span>
+                    <div class="pick-actions">
+                      <span class="chip chip-success num" title="Ventaja moderada sobre el mercado">+{{ pk.model_edge * 100 | number: '1.0-1' }} pts</span>
+                      <a class="link small" routerLink="/bankroll" [queryParams]="bankrollParams(pk)">Calcular apuesta</a>
+                    </div>
                   } @else if (pk.tier === 'revisar') {
                     <span class="chip chip-warning num" title="Diferencia demasiado grande: probablemente al modelo le falta información">Revisar</span>
                   } @else {
@@ -183,7 +235,16 @@
         }
 
         <!-- Contexto -->
-        @if (info.length || simInfo.length) {
+        @if (isV2) {
+          <div class="block">
+            <div class="block-head"><h4>Simulación</h4></div>
+            <dl class="kv">
+              @for (r of v2Info; track r.label) {
+                <div><dt>{{ r.label }}</dt><dd class="num">{{ r.value }}</dd></div>
+              }
+            </dl>
+          </div>
+        } @else if (info.length || simInfo.length) {
           <div class="block">
             <div class="block-head"><h4>Contexto</h4></div>
             <dl class="kv">
@@ -215,25 +276,33 @@
                   </div>
                   <div class="picks">
                     @for (i of list; track i.player) {
-                      <div class="pick inj">
-                        <div class="pick-main">
-                          <span class="pick-name">{{ i.player }}@if (i.position) {<span class="faint pos"> · {{ i.position }}</span>}</span>
-                          <span class="faint">{{ statusLabel(i.status) }}{{ i.play_probability > 0 && i.play_probability < 1 ? ' (' + pct(i.play_probability) + ' de jugar)' : '' }} · jugaría ~{{ i.usual_minutes | number: '1.0-0' }} min</span>
-                          @if (i.injury || i.source) {
-                            <span class="faint">{{ i.injury }}{{ i.injury && i.source ? ' · ' : '' }}{{ sourceLabel(i) ? 'Fuente: ' + sourceLabel(i) : '' }}</span>
-                          }
-                          <span class="faint">Ataque {{ signed(i.o_rating) }} · Defensa {{ signed(i.d_rating) }} (por 100 posesiones, sobre el promedio)</span>
-                          @if (onOffLabel(i)) {
-                            <span class="faint">{{ onOffLabel(i) }}</span>
-                          }
-                          @if (i.minutes_to?.length) {
-                            <span class="faint">Sus minutos: {{ minutesTo(i) }}</span>
-                          }
-                        </div>
-                        <span class="chip num" [ngClass]="i.impact_if_out <= -1 ? 'chip-danger' : ''"
-                              [attr.title]="'Rango probable: ' + signed(i.impact_if_out - i.impact_sd) + ' a ' + signed(i.impact_if_out + i.impact_sd)">
-                          {{ signed(i.impact_if_out) }}<span class="pm"> ±{{ i.impact_sd | number: '1.1-1' }}</span> pts
-                        </span>
+                      <div class="pick inj" [class.open]="openInj.has(i.player)">
+                        <button class="inj-head" (click)="toggleInj(i.player)" [attr.aria-expanded]="openInj.has(i.player)">
+                          <span class="pick-main">
+                            <span class="pick-name">{{ i.player }}@if (i.position) {<span class="faint pos"> · {{ i.position }}</span>}</span>
+                            <span class="faint">{{ statusLabel(i.status) }}{{ i.play_probability > 0 && i.play_probability < 1 ? ' · ' + pct(i.play_probability) + ' de jugar' : '' }}{{ reason(i) ? ' · ' + reason(i) : '' }}</span>
+                          </span>
+                          <span class="chip num" [ngClass]="i.impact_if_out <= -1 ? 'chip-danger' : ''"
+                                [attr.title]="'Rango probable: ' + signed(i.impact_if_out - i.impact_sd) + ' a ' + signed(i.impact_if_out + i.impact_sd)">
+                            {{ signed(i.impact_if_out) }}<span class="pm"> ±{{ i.impact_sd | number: '1.1-1' }}</span>
+                          </span>
+                          <app-icon name="chevron" class="inj-chev" [class.rot]="openInj.has(i.player)" />
+                        </button>
+                        @if (openInj.has(i.player)) {
+                          <dl class="inj-detail">
+                            <div><dt>Jugaría hoy</dt><dd class="num">~{{ i.usual_minutes | number: '1.0-0' }} min</dd></div>
+                            <div><dt>Ataque · defensa</dt><dd class="num">{{ signed(i.o_rating) }} · {{ signed(i.d_rating) }}</dd></div>
+                            @if (i.on_off && (i.on_off.on_net !== null || i.on_off.off_net !== null)) {
+                              <div><dt>Equipo con él · sin él</dt><dd class="num">{{ i.on_off.on_net === null ? '—' : signed(i.on_off.on_net) }} · {{ i.on_off.off_net === null ? '—' : signed(i.on_off.off_net) }}</dd></div>
+                            }
+                            @if (i.minutes_to?.length) {
+                              <div class="wide"><dt>Sus minutos van a</dt><dd>{{ minutesTo(i) }}</dd></div>
+                            }
+                            @if (sourceLabel(i)) {
+                              <div><dt>Fuente</dt><dd>{{ sourceLabel(i) }}</dd></div>
+                            }
+                          </dl>
+                        }
                       </div>
                     }
                   </div>
@@ -241,7 +310,7 @@
               }
             }
           </div>
-          <p class="fine">El número de la derecha son los puntos de margen que pierde su equipo si no juega, ya contando quién se queda con sus minutos. La predicción los descuenta según su probabilidad de jugar. "Con él / sin él en cancha" es lo observado esta temporada, sin ajustar por rivales ni compañeros.</p>
+          <p class="fine">El número es lo que pierde su equipo en el margen si no juega (± su rango), ya contando quién se queda con sus minutos. Toca un jugador para ver el detalle. Ataque y defensa: puntos por 100 posesiones sobre un jugador promedio. "Con él · sin él": rendimiento del equipo esta temporada, sin ajustar.</p>
         </div>
       }
 

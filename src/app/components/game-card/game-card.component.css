@@ -158,3 +158,22 @@
 .pick.dim { opacity: .6; }
 .fine.warn { color: var(--warning); display: flex; gap: 6px; align-items: flex-start; }
 .fine.warn app-icon { width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px; }
+
+img.avatar.logo { object-fit: contain; background: var(--surface); padding: 4px; }
+.team-row.is-fav img.avatar.logo { background: var(--surface); border-color: var(--accent); }
+.team-score.won { color: var(--text); font-weight: 800; }
+.verdict { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 10px 0 0; font-size: 13px; color: var(--text-2); }
+.verdict strong { color: var(--text); font-weight: 600; }
+.why-notes { margin: 10px 0 0; padding-left: 18px; font-size: 13px; color: var(--text-2); display: flex; flex-direction: column; gap: 4px; }
+.pick-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.link.small { font-size: 12px; }
+.pick.inj { flex-direction: column; align-items: stretch; padding: 0; }
+.inj-head { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: 0; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+.inj-head .pick-main { flex: 1; min-width: 0; }
+.inj-chev { width: 14px; height: 14px; color: var(--text-3); transition: transform .15s; flex-shrink: 0; }
+.inj-chev.rot { transform: rotate(180deg); }
+.inj-detail { margin: 0; padding: 0 12px 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 12.5px; }
+.inj-detail div { display: flex; flex-direction: column; }
+.inj-detail .wide { grid-column: 1 / -1; }
+.inj-detail dt { color: var(--text-3); font-size: 11.5px; }
+.inj-detail dd { margin: 0; color: var(--text); }

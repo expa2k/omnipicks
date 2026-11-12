@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -8,6 +8,9 @@ export class ApiService {
 
   /** Se emite cuando el usuario pulsa "Actualizar" en la barra superior. */
   readonly refresh$ = new Subject<void>();
+
+  /** Día que está mostrando la cartelera (hora del Este): hoy o el siguiente día con partidos. */
+  readonly slate = signal<{ date: string; isToday: boolean } | null>(null);
 
   constructor(private http: HttpClient) {}
 
@@ -28,10 +31,12 @@ export class ApiService {
     return this.http.get(`${this.baseUrl}/predictions/nba/performance`);
   }
 
-  getGamePredictions(sport?: string): Observable<any> {
-    const url = sport
-      ? `${this.baseUrl}/predictions/games?sport=${sport}`
-      : `${this.baseUrl}/predictions/games`;
-    return this.http.get(url);
+  getGamePredictions(sport?: string, includeFinished = false): Observable<any> {
+    const params: Record<string, string> = {};
+    if (sport) params['sport'] = sport;
+    if (includeFinished) params['include_finished'] = 'true';
+    return this.http.get(`${this.baseUrl}/predictions/games`, { params }).pipe(
+      tap((d: any) => { if (!includeFinished && d?.date) this.slate.set({ date: d.date, isToday: d.is_today !== false }); }),
+    );
   }
 }

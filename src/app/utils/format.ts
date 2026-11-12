@@ -178,3 +178,69 @@ function humanize(key: string): string {
   const s = key.replace(/_/g, ' ');
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+// ── Motivos de lesión en español ────────────────────────────────────
+
+/** Partes del cuerpo: [traducción, género] (m = masculino, f = femenino). */
+const BODY: [RegExp, string, 'm' | 'f'][] = [
+  [/plantar fascia|plantar fasciitis/, 'fascia plantar', 'f'], [/low back|lower back|lumbar/, 'espalda baja', 'f'],
+  [/achilles/, 'tendón de Aquiles', 'm'], [/hamstring/, 'isquiotibial', 'm'], [/quadriceps|quad/, 'cuádriceps', 'm'],
+  [/adductor/, 'aductor', 'm'], [/abdominal|abdomen/, 'abdomen', 'm'], [/oblique/, 'oblicuo', 'm'],
+  [/ankle/, 'tobillo', 'm'], [/knee/, 'rodilla', 'f'], [/groin/, 'ingle', 'f'], [/calf/, 'pantorrilla', 'f'],
+  [/toe/, 'dedo del pie', 'm'], [/foot|feet/, 'pie', 'm'], [/heel/, 'talón', 'm'], [/hip/, 'cadera', 'f'],
+  [/back/, 'espalda', 'f'], [/shoulder/, 'hombro', 'm'], [/wrist/, 'muñeca', 'f'], [/thumb/, 'pulgar', 'm'],
+  [/finger/, 'dedo', 'm'], [/hand/, 'mano', 'f'], [/elbow/, 'codo', 'm'], [/thigh/, 'muslo', 'm'],
+  [/neck/, 'cuello', 'm'], [/rib/, 'costilla', 'f'], [/shin|tibia/, 'espinilla', 'f'], [/chest/, 'pecho', 'm'],
+  [/nose|nasal/, 'nariz', 'f'], [/eye/, 'ojo', 'm'], [/face|facial/, 'cara', 'f'], [/head/, 'cabeza', 'f'],
+  [/pelvis/, 'pelvis', 'f'], [/sciatica/, 'ciática', 'f'], [/meniscus/, 'menisco', 'm'], [/patella/, 'rótula', 'f'],
+  [/\bacl\b/, 'ligamento cruzado anterior', 'm'], [/\bmcl\b/, 'ligamento colateral medial', 'm'], [/leg/, 'pierna', 'f'],
+  [/arm/, 'brazo', 'm'], [/jaw/, 'mandíbula', 'f'], [/lung/, 'pulmón', 'm'],
+];
+
+/** Tipo de lesión. */
+const KIND: [RegExp, string][] = [
+  [/stress reaction/, 'reacción por estrés'], [/stress fracture/, 'fractura por estrés'], [/avulsion fracture/, 'fractura por avulsión'],
+  [/fracture/, 'fractura'], [/sprain/, 'esguince'], [/strain/, 'distensión'], [/tear|torn|rupture/, 'rotura'],
+  [/soreness|sore/, 'molestias'], [/contusion|bruise/, 'contusión'], [/tendinopathy/, 'tendinopatía'],
+  [/tendinitis|tendonitis/, 'tendinitis'], [/inflammation/, 'inflamación'], [/spasm/, 'espasmos'], [/surgery/, 'cirugía'],
+  [/dislocation/, 'luxación'], [/impingement/, 'pinzamiento'], [/bursitis/, 'bursitis'], [/laceration/, 'corte'],
+  [/irritation/, 'irritación'], [/tightness/, 'rigidez'], [/injury|injured/, 'lesión'],
+];
+
+/** "Injury/Illness - Left Groin Strain" → "Distensión en la ingle izquierda". */
+export function injuryReason(text?: string | null): string {
+  if (!text) return '';
+  const raw = String(text).trim();
+  const s = raw.toLowerCase();
+  if (/two-way/.test(s)) return 'Asignado a la G League (contrato two-way)';
+  if (/g league|on assignment/.test(s)) return 'Asignado a la G League';
+  if (/personal/.test(s)) return 'Motivos personales';
+  if (/suspension/.test(s)) return 'Suspendido';
+  if (/concussion/.test(s)) return 'Protocolo de conmoción cerebral';
+  if (/rest\b|resting/.test(s) && !/injury|management/.test(s)) return 'Descanso';
+  if (/not with team/.test(s)) return 'No está con el equipo';
+  if (/illness|flu|sick/.test(s) && !BODY.some(([r]) => r.test(s))) return 'Enfermedad';
+  if (/descanso \(back-to-back\)/.test(s)) return raw;
+
+  const body = BODY.find(([r]) => r.test(s));
+  const kind = KIND.find(([r]) => r.test(s));
+  const side = /\bleft\b/.test(s) ? 'left' : /\bright\b/.test(s) ? 'right' : null;
+  const mgmt = /management/.test(s);
+  if (!body && !kind) return mgmt ? 'Manejo de carga' : raw;
+
+  let part = '';
+  if (body) {
+    const [, name, g] = body;
+    const art = g === 'f' ? 'la' : 'el';
+    const sideTxt = side ? (side === 'left' ? (g === 'f' ? ' izquierda' : ' izquierdo') : (g === 'f' ? ' derecha' : ' derecho')) : '';
+    part = `${art} ${name}${sideTxt}`;
+  }
+  let out: string;
+  if (kind && part) out = `${cap(kind[1])} en ${part.replace(/^el /, 'el ')}`.replace(' en el ', ' en el ');
+  else if (part) out = `${cap(part.replace(/^(el|la) /, ''))}`;
+  else out = cap(kind![1]);
+  if (mgmt) out += ' (manejo de carga)';
+  return out;
+}
+
+function cap(s: string): string { return s.charAt(0).toUpperCase() + s.slice(1); }

@@ -26,7 +26,31 @@
         </button>
       }
     </div>
+    <div class="toolbar-right">
+      <label class="sort">
+        <span>Ordenar por</span>
+        <select [value]="sortBy" (change)="setSort($any($event.target).value)">
+          @for (o of sorts; track o.key) { <option [value]="o.key">{{ o.label }}</option> }
+        </select>
+      </label>
+      <button class="btn btn-sm" (click)="toggleFinished()" [class.active]="showFinished">
+        <app-icon name="clock" /> {{ showFinished ? 'Ocultar terminados' : 'Ver terminados de hoy' }}
+      </button>
+    </div>
   </div>
+
+  @if (showFinished) {
+    <section class="finished">
+      <h2 class="section-title">Terminados y en vivo hoy</h2>
+      @if (!finished.length) {
+        <p class="muted">Todavía no hay partidos terminados hoy.</p>
+      } @else {
+        <div class="grid">
+          @for (g of finished; track g.id) { <app-game-card [game]="g" /> }
+        </div>
+      }
+    </section>
+  }
 
   @if (loading) {
     <div class="grid">
@@ -43,8 +67,8 @@
     <div class="card empty-state">
       <div class="empty-icon"><app-icon name="calendar" /></div>
       @if (games.length === 0) {
-        <h3>No hay partidos por jugar hoy</h3>
-        <p>Los pronósticos aparecen en cuanto el pipeline descarga la cartelera del día.</p>
+        <h3>No hay partidos por jugar</h3>
+        <p>Los pronósticos aparecen en cuanto se carga la cartelera. Prueba "Ver terminados de hoy" para los resultados.</p>
       } @else {
         <h3>Ningún partido coincide con el filtro</h3>
         <p>Prueba con otro filtro o borra la búsqueda.</p>

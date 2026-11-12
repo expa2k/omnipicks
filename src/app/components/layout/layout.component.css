@@ -95,3 +95,5 @@
   .hide-sm { display: none; }
   .topbar-date span { font-size: 13px; }
 }
+
+.date-chip { margin-left: 6px; font-size: 11px; }

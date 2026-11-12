@@ -9,7 +9,8 @@
   <script>
     // Aplica el tema guardado antes de pintar (evita el parpadeo claro/oscuro)
     try {
-      if (localStorage.getItem('omnipicks-theme') === 'dark') {
+      var t = localStorage.getItem('omnipicks-theme');
+      if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.setAttribute('data-theme', 'dark');
       }
     } catch (e) {}

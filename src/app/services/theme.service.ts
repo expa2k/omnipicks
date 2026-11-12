@@ -27,7 +27,12 @@ export class ThemeService {
     else root.removeAttribute('data-theme');
   }
 
+  /** Lo guardado por el usuario; si nunca eligió, el tema del sistema. */
   private readStored(): Theme {
-    try { return localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light'; } catch { return 'light'; }
+    try {
+      const v = localStorage.getItem(STORAGE_KEY);
+      if (v === 'dark' || v === 'light') return v;
+    } catch { /* modo privado */ }
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 }
