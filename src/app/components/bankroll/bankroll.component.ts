@@ -20,8 +20,16 @@ export class BankrollComponent implements OnInit {
   fromPick: string | null = null;
   perf: any = null;
 
-  get live() { return this.perf?.models?.nba_players_v2 || null; }
-  get liveV1() { return this.perf?.models?.nba_possessions_v1 || null; }
+  perfSport: 'nba' | 'nfl' = 'nba';
+  get live() { return this.perf?.models?.[this.perf?.main_model || 'nba_players_v2'] || null; }
+  get liveV1() { return this.perfSport === 'nba' ? this.perf?.models?.nba_possessions_v1 || null : null; }
+
+  setPerfSport(s: 'nba' | 'nfl') {
+    this.perfSport = s;
+    this.perf = null;
+    this.showAll = false;
+    this.api.getPerformance(s).pipe(catchError(() => of(null))).subscribe(p => (this.perf = p));
+  }
   get mk() { return this.live?.markets || null; }
   showAll = false;
   get rows(): any[] { const r = this.perf?.recent || []; return this.showAll ? r : r.slice(0, 15); }
@@ -69,7 +77,7 @@ export class BankrollComponent implements OnInit {
       if (saved > 0) this.currentBankroll = saved;
     } catch { /* modo privado */ }
     this.calculate();
-    this.api.getNbaPerformance().pipe(catchError(() => of(null))).subscribe(p => (this.perf = p));
+    this.setPerfSport('nba');
   }
 
   updateOdds(e: Event) { this.calcOdds = parseFloat((e.target as HTMLInputElement).value) || 0; this.calculate(); }

@@ -98,17 +98,23 @@
           </div>
         </div>
 
-        <!-- Rendimiento en vivo (NBA) -->
+        <!-- Rendimiento en vivo (NBA o NFL) -->
         <div class="card panel">
-          <h3>Modelo NBA en vivo</h3>
-          @if (live) {
-            <div class="perf">
-              <div class="perf-row head"><span></span><span>v2</span>@if (liveV1) {<span>v1</span>}@if (live.vs_market) {<span>Mercado</span>}</div>
-              <div class="perf-row"><span>Acierto de ganador</span><span class="num strong">{{ live.winner_pct * 100 | number: '1.0-1' }}%</span>@if (liveV1) {<span class="num">{{ liveV1.winner_pct * 100 | number: '1.0-1' }}%</span>}@if (live.vs_market) {<span class="num">{{ live.vs_market.market_winner_pct * 100 | number: '1.0-1' }}%</span>}</div>
-              <div class="perf-row"><span>Error del margen</span><span class="num strong">{{ live.mae_margin | number: '1.1-1' }}</span>@if (liveV1) {<span class="num">{{ liveV1.mae_margin | number: '1.1-1' }}</span>}@if (live.vs_market) {<span class="num">{{ live.vs_market.market_mae_margin | number: '1.1-1' }}</span>}</div>
-              <div class="perf-row"><span>Log loss</span><span class="num strong">{{ live.logloss | number: '1.3-3' }}</span>@if (liveV1) {<span class="num">{{ liveV1.logloss | number: '1.3-3' }}</span>}@if (live.vs_market) {<span class="num">—</span>}</div>
+          <div class="panel-head">
+            <h3>Modelo {{ panelSport === 'nfl' ? 'NFL' : 'NBA' }} en vivo</h3>
+            <div class="segmented" role="tablist">
+              <button role="tab" [class.active]="panelSport === 'nba'" (click)="panelSport = 'nba'">NBA</button>
+              <button role="tab" [class.active]="panelSport === 'nfl'" (click)="panelSport = 'nfl'">NFL</button>
             </div>
-            @if (live.markets; as mk) {
+          </div>
+          @if (pLive) {
+            <div class="perf">
+              <div class="perf-row head"><span></span><span>v2</span>@if (pLiveV1) {<span>v1</span>}@if (pLive.vs_market) {<span>Mercado</span>}</div>
+              <div class="perf-row"><span>Acierto de ganador</span><span class="num strong">{{ pLive.winner_pct * 100 | number: '1.0-1' }}%</span>@if (pLiveV1) {<span class="num">{{ pLiveV1.winner_pct * 100 | number: '1.0-1' }}%</span>}@if (pLive.vs_market) {<span class="num">{{ pLive.vs_market.market_winner_pct * 100 | number: '1.0-1' }}%</span>}</div>
+              <div class="perf-row"><span>Error del margen</span><span class="num strong">{{ pLive.mae_margin | number: '1.1-1' }}</span>@if (pLiveV1) {<span class="num">{{ pLiveV1.mae_margin | number: '1.1-1' }}</span>}@if (pLive.vs_market) {<span class="num">{{ pLive.vs_market.market_mae_margin | number: '1.1-1' }}</span>}</div>
+              <div class="perf-row"><span>Log loss</span><span class="num strong">{{ pLive.logloss | number: '1.3-3' }}</span>@if (pLiveV1) {<span class="num">{{ pLiveV1.logloss | number: '1.3-3' }}</span>}@if (pLive.vs_market) {<span class="num">—</span>}</div>
+            </div>
+            @if (pLive.markets; as mk) {
               <div class="perf mk">
                 <div class="perf-row head"><span>Mercado</span><span>Todos</span><span>Recom.</span><span>Unid.</span></div>
                 @for (m of [{k:'winner', n:'Ganador'}, {k:'spread', n:'Spread'}, {k:'total', n:'Total'}]; track m.k) {
@@ -116,13 +122,13 @@
                 }
               </div>
             }
-            @if (live.vs_market) {
-              <p class="fine">El modelo quedó más cerca del resultado que la línea en {{ live.vs_market.model_closer_pct * 100 | number: '1.0-0' }}% de {{ live.vs_market.games }} partidos.
-                @if (live.vs_market.ats_hit_pct !== null) { Contra el spread acertó {{ live.vs_market.ats_hit_pct * 100 | number: '1.0-0' }}% ({{ live.vs_market.ats_games }} partidos). }</p>
+            @if (pLive.vs_market) {
+              <p class="fine">El modelo quedó más cerca del resultado que la línea en {{ pLive.vs_market.model_closer_pct * 100 | number: '1.0-0' }}% de {{ pLive.vs_market.games }} partidos.
+                @if (pLive.vs_market.ats_hit_pct !== null) { Contra el spread acertó {{ pLive.vs_market.ats_hit_pct * 100 | number: '1.0-0' }}% ({{ pLive.vs_market.ats_games }} partidos). }</p>
             }
-            @if (perf.recent?.length) {
+            @if (panelPerf.recent?.length) {
               <div class="recent">
-                @for (r of perf.recent.slice(0, 6); track r.date + r.matchup) {
+                @for (r of panelPerf.recent.slice(0, 6); track r.date + r.matchup) {
                   <div class="recent-row">
                     <span class="dot-res" [class.ok]="r.hit"></span>
                     <span class="ellipsis">{{ r.matchup }}</span>
@@ -132,10 +138,14 @@
               </div>
             }
           } @else {
-            <p class="fine">Se guarda la última predicción antes de cada partido y se compara con el resultado. {{ perf?.pending ? 'Hay ' + perf.pending + ' esperando resultado.' : '' }}</p>
+            <p class="fine">Se guarda la última predicción antes de cada partido y se compara con el resultado. {{ panelPerf?.pending ? 'Hay ' + panelPerf.pending + ' esperando resultado.' : '' }}</p>
           }
-          @if (perf?.backtest; as bt) {
-            <p class="fine">Backtest de 3 temporadas ({{ bt.games | number }} partidos): acierto {{ bt.winner_pct * 100 | number: '1.0-1' }}%, error del margen {{ bt.mae_margin | number: '1.1-1' }} pts, log loss {{ bt.logloss | number: '1.3-3' }}.</p>
+          @if (panelPerf?.backtest; as bt) {
+            @if (panelSport === 'nfl') {
+              <p class="fine">Backtest semana a semana ({{ bt.games | number }} partidos desde 2013): acierto {{ bt.winner_pct * 100 | number: '1.0-1' }}%, error del margen {{ bt.mae_margin | number: '1.1-1' }} pts (la línea de cierre: {{ bt.mae_market_margin | number: '1.1-1' }}). Sin ventaja contra el mercado.</p>
+            } @else {
+              <p class="fine">Backtest de 3 temporadas ({{ bt.games | number }} partidos): acierto {{ bt.winner_pct * 100 | number: '1.0-1' }}%, error del margen {{ bt.mae_margin | number: '1.1-1' }} pts, log loss {{ bt.logloss | number: '1.3-3' }}.</p>
+            }
           }
         </div>
 

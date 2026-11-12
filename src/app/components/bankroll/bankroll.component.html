@@ -66,11 +66,14 @@
 
   </div>
 
-  <!-- Historial (modelo NBA en vivo) -->
+  <!-- Historial (modelos en vivo: NBA y NFL) -->
     <section class="card history-live">
       <div class="hl-head">
-        <h3>Historial del modelo NBA</h3>
-        <a class="link" routerLink="/">Ver en el resumen</a>
+        <h3>Historial del modelo {{ perfSport === 'nfl' ? 'NFL' : 'NBA' }}</h3>
+        <div class="segmented" role="tablist">
+          <button role="tab" [class.active]="perfSport === 'nba'" (click)="setPerfSport('nba')">NBA</button>
+          <button role="tab" [class.active]="perfSport === 'nfl'" (click)="setPerfSport('nfl')">NFL</button>
+        </div>
       </div>
       @if (live) {
         <div class="hl-stats">
@@ -122,7 +125,7 @@
             <button class="link" (click)="showAll = !showAll">{{ showAll ? 'Ver menos' : 'Ver los ' + perf.recent.length + ' partidos' }}</button>
           }
         }
-        <p class="fine">Cada partido muestra lo que prefería el modelo antes de empezar, en los 3 mercados (✓ acertó, ✗ falló, = empate). La ★ marca lo <strong>recomendado</strong> (3 a 10 puntos de ventaja sobre el casino); el resultado en unidades es lo que habrías ganado o perdido apostando 1 unidad a cada recomendado con el momio real. Con pocos partidos estas cifras cambian mucho: hacen falta cientos para saber si hay ventaja real.@if (liveV1) { Modelo anterior: {{ liveV1.winner_pct * 100 | number: '1.0-0' }}% de acierto en ganador.}</p>
+        <p class="fine">Cada partido muestra lo que prefería el modelo antes de empezar, en los 3 mercados (✓ acertó, ✗ falló, = empate). La ★ marca lo <strong>recomendado</strong> (3 a 10 puntos de ventaja sobre el casino); el resultado en unidades es lo que habrías ganado o perdido apostando 1 unidad a cada recomendado con el momio real. Con pocos partidos estas cifras cambian mucho: hacen falta cientos para saber si hay ventaja real.@if (perfSport === 'nfl') { En la NFL el backtest 2017–2026 no encontró ventaja contra la línea de cierre: casi nunca habrá recomendados.}@if (liveV1) { Modelo anterior: {{ liveV1.winner_pct * 100 | number: '1.0-0' }}% de acierto en ganador.}</p>
       } @else {
         <p class="muted">Todavía no hay partidos terminados. Se guarda la predicción de cada partido antes de que empiece y aquí aparece el resultado.{{ perf?.pending ? ' Hay ' + perf.pending + ' esperando resultado.' : '' }}</p>
       }

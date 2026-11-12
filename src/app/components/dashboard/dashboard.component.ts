@@ -33,6 +33,13 @@ export class DashboardComponent implements OnInit {
   get live() { return this.perf?.models?.nba_players_v2 || null; }
   get liveV1() { return this.perf?.models?.nba_possessions_v1 || null; }
 
+  /** Panel "en vivo": NBA o NFL. */
+  perfNfl: any = null;
+  panelSport: 'nba' | 'nfl' = 'nba';
+  get panelPerf() { return this.panelSport === 'nfl' ? this.perfNfl : this.perf; }
+  get pLive() { return this.panelPerf?.models?.[this.panelPerf?.main_model || 'nba_players_v2'] || null; }
+  get pLiveV1() { return this.panelSport === 'nba' ? this.liveV1 : null; }
+
   readonly sports = SPORTS;
   readonly formatAmerican = formatAmerican;
 
@@ -48,10 +55,12 @@ export class DashboardComponent implements OnInit {
       summary: this.api.getDashboardSummary(),
       games: this.api.getGamePredictions(),
       perf: this.api.getNbaPerformance().pipe(catchError(() => of(null))),
+      perfNfl: this.api.getPerformance('nfl').pipe(catchError(() => of(null))),
     }).subscribe({
-      next: ({ summary, games, perf }: any) => {
+      next: ({ summary, games, perf, perfNfl }: any) => {
         this.summary = summary;
         this.perf = perf;
+        this.perfNfl = perfNfl;
         const list = (games.games || []).slice().sort((a: any, b: any) => (a.game_time || '').localeCompare(b.game_time || ''));
         this.upcoming = list.slice(0, 4);
         this.nextGame = list[0] || null;
