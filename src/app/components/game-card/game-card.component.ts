@@ -296,7 +296,13 @@ export class GameCardComponent implements OnChanges {
     }
     if (s.home_field) notes.push(`Ventaja de local: ${signed(s.home_field)} pts.`);
     if (s.indoor) notes.push('Se juega bajo techo: suele haber más puntos.');
-    else if (s.wind >= 15) notes.push(`Viento de ${s.wind} mph: baja el total.`);
+    else {
+      const src = s.weather_source ? ` (${s.weather_source})` : '';
+      if (s.rain >= 0.3) notes.push(`${s.precipitation_pct ?? Math.round(s.rain * 100)}% de probabilidad de lluvia${src}: el total baja ~${(3.4 * s.rain).toFixed(1)} pts.`);
+      if (s.snow >= 0.3) notes.push(`Posible nieve${src}.`);
+      if (s.wind >= 15) notes.push(`Viento de ${s.wind} mph: baja el total.`);
+      if (s.temp !== null && s.temp !== undefined && s.temp <= 32) notes.push(`Frío: ${s.temp}°F.`);
+    }
     return notes;
   }
 

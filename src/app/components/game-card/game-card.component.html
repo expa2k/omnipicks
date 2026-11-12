@@ -78,7 +78,8 @@
 
     <!-- Lo que recomienda el modelo (3 mercados) -->
     @if (modelPicks.length) {
-      <div class="mp-chips">
+      <div class="mp-chips" [class.lean]="isNflV2">
+        @if (isNflV2) { <span class="mp-lean" title="En la NFL el modelo no le gana a la línea de cierre: esto es hacia dónde se inclina, no una recomendación">Se inclina por</span> }
         @for (m of modelPicks; track m.key) {
           <span class="mp-chip" [ngClass]="'t-' + m.pick.tier + (m.pick.result ? ' r-' + m.pick.result : '')"
                 [attr.title]="m.name + ': modelo ' + pct(m.pick.prob) + (m.pick.implied !== null ? ' vs casino ' + pct(m.pick.implied) : '') + ' · ' + tierLabel(m.pick.tier)">
