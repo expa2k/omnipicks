@@ -119,8 +119,8 @@
   <!-- Análisis detallado -->
   @if (expanded) {
     <section class="details fade-in">
-      <!-- Por qué este pronóstico (NBA v2) -->
-      @if (isV2) {
+      <!-- Por qué este pronóstico (NBA v2 y NFL v2) -->
+      @if (hasWhy) {
         <div class="block">
           <div class="block-head">
             <h4>Por qué este pronóstico</h4>
@@ -143,7 +143,11 @@
               @for (n of whyNotes; track n) { <li>{{ n }}</li> }
             </ul>
           }
-          <p class="fine">La fuerza sale de sumar el rating de cada jugador por los minutos que se espera que juegue hoy.</p>
+          @if (isNflV2) {
+            <p class="fine">La fuerza sale del EPA por jugada ajustado por rival y del marcador; el QB titular se compara con el que el equipo ha usado en las últimas semanas.</p>
+          } @else {
+            <p class="fine">La fuerza sale de sumar el rating de cada jugador por los minutos que se espera que juegue hoy.</p>
+          }
         </div>
       } @else if (pairs.length) {
       <!-- Comparación de equipos -->
@@ -247,12 +251,15 @@
               }
             </div>
             <p class="fine">El modelo elige un lado en cada mercado. <strong>Recomendado</strong>: le ve entre 3 y 10 puntos de ventaja sobre el casino. <strong>Revisar</strong>: más de 10, casi siempre información que le falta. <strong>Sin valor</strong>: lo prefiere, pero no lo suficiente para apostar. El modelo no usa el mercado: solo se compara al final.</p>
+            @if (isNflV2) {
+              <p class="fine"><strong>NFL:</strong> en el backtest 2017–2026 el modelo no le ganó a la línea de cierre. Por eso sus probabilidades de spread y total quedan cerca de 50% y el ganador nunca se recomienda: úsalo como pronóstico, no como apuesta.</p>
+            }
           </div>
         }
 
-        @if (isV2) {
+        @if (hasWhy) {
           <div class="block">
-            <div class="block-head"><h4>Simulación</h4></div>
+            <div class="block-head"><h4>{{ isNflV2 ? 'Rango del pronóstico' : 'Simulación' }}</h4></div>
             <dl class="kv">
               @for (r of v2Info; track r.label) {
                 <div><dt>{{ r.label }}</dt><dd class="num">{{ r.value }}</dd></div>

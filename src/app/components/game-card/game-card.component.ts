@@ -188,6 +188,9 @@ export class GameCardComponent implements OnChanges {
   // ── Modelo NBA v2 ────────────────────────────────────────────────
   get sd() { return this.p?.simulation_details || {}; }
   get isV2(): boolean { return this.sd.model === 'nba_players_v2'; }
+  get isNflV2(): boolean { return this.sd.model === 'nfl_v2'; }
+  /** Bloque "Por qué este pronóstico" y "Simulación" (modelos nuevos de NBA y NFL). */
+  get hasWhy(): boolean { return this.isV2 || this.isNflV2; }
   get result() { return this.game?.result || null; }
   logo(side: string): string | null { return side === 'home' ? this.game?.home_logo : this.game?.away_logo; }
 
@@ -219,6 +222,7 @@ export class GameCardComponent implements OnChanges {
 
   /** Factores del partido que de verdad usa el modelo v2, en palabras. */
   get whyRows(): { label: string; away: string; home: string; hint?: string }[] {
+    if (this.isNflV2) return this.nflWhyRows;
     const c = this.sd.context || {};
     const t = this.sd.teams || {};
     const rows: { label: string; away: string; home: string; hint?: string }[] = [];
@@ -236,6 +240,7 @@ export class GameCardComponent implements OnChanges {
   }
 
   get whyNotes(): string[] {
+    if (this.isNflV2) return this.nflWhyNotes;
     const c = this.sd.context || {};
     const notes: string[] = [];
     if (c.rest_diff) notes.push(`${initials(c.rest_diff > 0 ? this.game.home_team : this.game.away_team)} llega con ${Math.abs(c.rest_diff)} día(s) más de descanso.`);
@@ -248,9 +253,50 @@ export class GameCardComponent implements OnChanges {
     return notes;
   }
 
+  // ── Modelo NFL v2 ────────────────────────────────────────────────
+  private get nflWhyRows(): { label: string; away: string; home: string; hint?: string }[] {
+    const s = this.sd;
+    const hq = s.home_qb || {}, aq = s.away_qb || {};
+    const f2 = (v: any) => (v === null || v === undefined ? '—' : (v > 0 ? '+' : '') + Number(v).toFixed(2));
+    return [
+      { label: 'QB titular', away: aq.name || '—', home: hq.name || '—' },
+      { label: 'Rating del QB', away: f2(aq.rating), home: f2(hq.rating),
+        hint: 'EPA por dropback sobre la media de la liga (pases, sacks y scrambles), lo reciente pesa más' },
+      { label: 'Cambio contra su QB habitual', away: signed(aq.adjustment_pts_epa), home: signed(hq.adjustment_pts_epa),
+        hint: 'EPA por partido que gana o pierde el equipo por jugar con este QB y no con el que ha usado' },
+      { label: 'Rating del equipo (EPA)', away: f2(s.away_net_epa), home: f2(s.home_net_epa),
+        hint: 'EPA por jugada a favor menos en contra, ajustado por rival' },
+      { label: 'Rating por marcador', away: signed(s.away_points_rating), home: signed(s.home_points_rating),
+        hint: 'Puntos sobre un equipo promedio, ajustado por rival' },
+    ];
+  }
+
+  private get nflWhyNotes(): string[] {
+    const s = this.sd;
+    const notes: string[] = [];
+    for (const [side, team] of [['away', this.game.away_team], ['home', this.game.home_team]] as const) {
+      const q = s[`${side}_qb`] || {};
+      if (q.name && !q.known) notes.push(`${q.name} (${initials(team)}) casi no tiene jugadas: se toma como QB suplente.`);
+      else if (q.name && Math.abs(q.adjustment_pts_epa) >= 1.5)
+        notes.push(`${initials(team)} juega con ${q.name}, ${q.adjustment_pts_epa > 0 ? 'mejor' : 'peor'} que el QB con el que ha jugado.`);
+    }
+    if (s.home_field) notes.push(`Ventaja de local: ${signed(s.home_field)} pts.`);
+    if (s.indoor) notes.push('Se juega bajo techo: suele haber más puntos.');
+    else if (s.wind >= 15) notes.push(`Viento de ${s.wind} mph: baja el total.`);
+    return notes;
+  }
+
   get v2Info(): { label: string; value: string }[] {
     const s = this.sd;
     const rows: { label: string; value: string }[] = [];
+    if (this.isNflV2 && this.p?.predicted_spread !== undefined) {
+      const m = -this.p.predicted_spread, t = this.p.predicted_total;
+      const z = 1.2816;
+      rows.push({ label: 'Margen del local (80% de las veces)', value: `${signed(m - z * s.sigma_margin)} a ${signed(m + z * s.sigma_margin)}` });
+      if (t) rows.push({ label: 'Total (80% de las veces)', value: `${Math.round(t - z * s.sigma_total)} a ${Math.round(t + z * s.sigma_total)}` });
+      rows.push({ label: 'Semana', value: String(s.week) });
+      return rows;
+    }
     if (s.most_likely_score) rows.push({ label: 'Marcador más probable', value: `${initials(this.game.away_team)} ${s.most_likely_score[1]} – ${s.most_likely_score[0]} ${initials(this.game.home_team)}` });
     if (s.margin_range_80) rows.push({ label: 'Margen del local (80% de las veces)', value: `${signed(s.margin_range_80[0])} a ${signed(s.margin_range_80[1])}` });
     if (s.total_range_80) rows.push({ label: 'Total (80% de las veces)', value: `${Math.round(s.total_range_80[0])} a ${Math.round(s.total_range_80[1])}` });
