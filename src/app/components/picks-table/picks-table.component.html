@@ -6,7 +6,7 @@
         <h1 class="page-title">{{ title }}</h1>
         <p class="page-subtitle">
           @if (loading) { Cargando partidos… }
-          @else { {{ games.length }} {{ games.length === 1 ? 'partido' : 'partidos' }} por jugar hoy · pronóstico con simulación }
+          @else { {{ games.length }} {{ games.length === 1 ? 'partido' : 'partidos' }} por jugar {{ isToday ? 'hoy' : 'el ' + dayLabel }} · pronóstico con simulación }
         </p>
       </div>
     </div>

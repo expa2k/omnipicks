@@ -2,7 +2,7 @@
   <div class="page-header">
     <div>
       <span class="eyebrow">Resumen del día</span>
-      <h1 class="page-title">Hola, esto es lo que hay hoy</h1>
+      <h1 class="page-title">{{ summary && summary.is_today === false ? 'Hoy ya no quedan partidos: esto es lo que viene' : 'Hola, esto es lo que hay hoy' }}</h1>
       <p class="page-subtitle">Pronósticos generados con datos reales y miles de simulaciones por partido.</p>
     </div>
     <a routerLink="/picks" class="btn btn-primary">Ver cartelera <app-icon name="arrow-right" /></a>
@@ -134,7 +134,7 @@
         @if (summary?.top_pick; as tp) {
           <div class="card panel highlight">
             <div class="panel-head">
-              <h3>Mayor diferencia con el mercado</h3>
+              <h3>Mejor recomendación</h3>
               <span class="chip">{{ tp.sport }}</span>
             </div>
             <p class="tp-matchup">{{ tp.matchup }}</p>
@@ -142,9 +142,9 @@
             <div class="tp-stats">
               <div><span class="k">Momio</span><span class="v num">{{ formatAmerican(tp.best_odds) }}</span></div>
               <div><span class="k">Casino</span><span class="v">{{ tp.best_sportsbook }}</span></div>
-              <div><span class="k">EV estimado</span><span class="v num">{{ (tp.expected_value * 100).toFixed(1) }}%</span></div>
+              <div><span class="k">Modelo vs casino</span><span class="v num">{{ (tp.model_probability * 100).toFixed(0) }}% vs {{ (tp.implied_probability * 100).toFixed(0) }}%</span></div>
             </div>
-            <p class="fine"><app-icon name="info" /> Diferencias muy grandes suelen indicar que al modelo le falta información (por ejemplo, bajas). Tómalo como referencia, no como recomendación.</p>
+            <p class="fine"><app-icon name="info" /> La de mayor valor entre las que el modelo ve con 3 a 10 puntos de ventaja. Las diferencias más grandes se marcan como "revisar". Es una referencia, no un consejo de apuesta.</p>
           </div>
         }
       </aside>

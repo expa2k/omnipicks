@@ -32,6 +32,7 @@ export class GameCardComponent implements OnChanges {
   readonly formatAmerican = formatAmerican;
   readonly formatValue = formatValue;
   readonly sportIcon = sportIcon;
+  readonly Math = Math;
 
   ngOnChanges() {
     const split = splitFactors(this.factors);
@@ -72,10 +73,41 @@ export class GameCardComponent implements OnChanges {
     return `${initials(fav)} −${Math.abs(s).toFixed(1)}`;
   }
 
-  get marketLine(): string | null { return this.factors?.linea_espn || null; }
+  /** Línea del mercado como "PHI −9.5" (de las cuotas guardadas; respaldo: la línea de ESPN del análisis). */
+  get marketLine(): string | null {
+    const sp = this.game?.odds?.spread;
+    if (sp && sp.home_line !== null && sp.home_line !== undefined) {
+      if (Math.abs(sp.home_line) < 0.05) return 'Parejo';
+      const fav = sp.home_line < 0 ? this.game.home_team : this.game.away_team;
+      return `${initials(fav)} −${Math.abs(sp.home_line).toFixed(1)}`;
+    }
+    return this.factors?.linea_espn || null;
+  }
   get marketTotal(): number | null {
-    const t = this.factors?.total_espn;
+    const t = this.game?.odds?.total?.line ?? this.factors?.total_espn;
     return t === null || t === undefined ? null : Number(t);
+  }
+  get hasMarket(): boolean { return this.market.home !== null || !!this.marketLine || this.marketTotal !== null; }
+
+  /** Favorito según el mercado ('home' | 'away' | null). */
+  get marketFavorite(): string | null {
+    return this.game?.odds?.market_favorite || (this.market.home !== null && this.market.away !== null
+      ? (this.market.home >= this.market.away ? 'home' : 'away') : null);
+  }
+
+  /** Diferencia de margen modelo − mercado, en puntos (positivo = el modelo ve mejor al local). */
+  get spreadGap(): number | null {
+    const sp = this.game?.odds?.spread?.home_line;
+    const m = this.p?.predicted_spread;
+    if (sp === null || sp === undefined || m === null || m === undefined) return null;
+    return sp - m;
+  }
+
+  get recommended(): any[] { return (this.game?.value_picks || []).filter((pk: any) => pk.tier === 'recomendado'); }
+  get toReview(): any[] { return (this.game?.value_picks || []).filter((pk: any) => pk.tier === 'revisar'); }
+
+  marketLabel(m: string): string {
+    return ({ moneyline: 'Ganador', spread: 'Spread', over_under: 'Total' } as Record<string, string>)[m] || '';
   }
 
   /** Diferencia modelo − mercado (en puntos porcentuales) para el lado favorito del modelo. */

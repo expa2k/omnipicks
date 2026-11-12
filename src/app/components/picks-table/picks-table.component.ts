@@ -29,10 +29,18 @@ export class PicksTableComponent implements OnInit {
   activeFilter: Filter = 'all';
   search = '';
   date: string | null = null;
+  isToday = true;
+
+  /** 'hoy' o 'mañana jueves 12' según el día que devuelve la API (hora del Este). */
+  get dayLabel(): string {
+    if (this.isToday || !this.date) return 'hoy';
+    const d = new Date(this.date + 'T12:00:00');
+    return d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
 
   readonly filters: { key: Filter; label: string }[] = [
     { key: 'all', label: 'Todos' },
-    { key: 'value', label: 'Con diferencias vs mercado' },
+    { key: 'value', label: 'Con recomendación' },
     { key: 'high_confidence', label: 'Confianza alta' },
   ];
 
@@ -54,6 +62,7 @@ export class PicksTableComponent implements OnInit {
       next: (data: any) => {
         this.games = data.games || [];
         this.date = data.date || null;
+        this.isToday = data.is_today !== false;
         this.applyFilter();
         this.loading = false;
       },
@@ -90,7 +99,7 @@ export class PicksTableComponent implements OnInit {
   }
 
   private matches(g: any, f: Filter): boolean {
-    if (f === 'value') return (g.value_picks?.length || 0) > 0;
+    if (f === 'value') return (g.value_picks || []).some((pk: any) => pk.tier === 'recomendado');
     if (f === 'high_confidence') return (g.prediction?.confidence || 0) >= 0.8;
     return true;
   }

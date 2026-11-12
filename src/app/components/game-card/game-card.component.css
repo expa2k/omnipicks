@@ -153,3 +153,8 @@
 .block.injuries { grid-column: 1 / -1; }
 .inj-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
 .inj-col .inj-team:first-child { margin-top: 0; }
+
+.fav-mkt { color: var(--text-3); }
+.pick.dim { opacity: .6; }
+.fine.warn { color: var(--warning); display: flex; gap: 6px; align-items: flex-start; }
+.fine.warn app-icon { width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px; }
