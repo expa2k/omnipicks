@@ -260,6 +260,8 @@ export class GameCardComponent implements OnChanges {
     const f2 = (v: any) => (v === null || v === undefined ? '—' : (v > 0 ? '+' : '') + Number(v).toFixed(2));
     return [
       { label: 'QB titular', away: aq.name || '—', home: hq.name || '—' },
+      { label: 'Estado', away: this.qbStatus(aq), home: this.qbStatus(hq),
+        hint: 'Reporte de lesiones de ESPN. En duda: el pronóstico mezcla al titular y a su suplente según la probabilidad de que juegue' },
       { label: 'Rating del QB', away: f2(aq.rating), home: f2(hq.rating),
         hint: 'EPA por dropback sobre la media de la liga (pases, sacks y scrambles), lo reciente pesa más' },
       { label: 'Cambio contra su QB habitual', away: signed(aq.adjustment_pts_epa), home: signed(hq.adjustment_pts_epa),
@@ -271,11 +273,23 @@ export class GameCardComponent implements OnChanges {
     ];
   }
 
+  private qbStatus(q: any): string {
+    const st = (q.status || 'Active').toLowerCase();
+    const es: Record<string, string> = { active: 'Disponible', questionable: 'En duda', doubtful: 'Duda seria', out: 'Fuera' };
+    const label = es[st] || q.status || 'Disponible';
+    return q.play_prob !== undefined && q.play_prob < 1 ? `${label} · ${Math.round(q.play_prob * 100)}%` : label;
+  }
+
   private get nflWhyNotes(): string[] {
     const s = this.sd;
     const notes: string[] = [];
+    const es: Record<string, string> = { 'Out': 'fuera', 'Injured Reserve': 'en la lista de lesionados (IR)', 'Doubtful': 'en duda seria' };
     for (const [side, team] of [['away', this.game.away_team], ['home', this.game.home_team]] as const) {
       const q = s[`${side}_qb`] || {};
+      for (const o of q.ruled_out || []) notes.push(`${o.name} (${initials(team)}) está ${es[o.status] || (o.status || '').toLowerCase()}: no se cuenta.`);
+      if (q.changed && q.name) notes.push(`${initials(team)} juega con ${q.name} en lugar de ${q.projected}.`);
+      if (q.play_prob !== undefined && q.play_prob < 1 && q.backup)
+        notes.push(`${q.name} está en duda: el pronóstico supone ${Math.round(q.play_prob * 100)}% que juega y ${Math.round((1 - q.play_prob) * 100)}% ${q.backup}.`);
       if (q.name && !q.known) notes.push(`${q.name} (${initials(team)}) casi no tiene jugadas: se toma como QB suplente.`);
       else if (q.name && Math.abs(q.adjustment_pts_epa) >= 1.5)
         notes.push(`${initials(team)} juega con ${q.name}, ${q.adjustment_pts_epa > 0 ? 'mejor' : 'peor'} que el QB con el que ha jugado.`);
