@@ -159,7 +159,7 @@ export class GameCardComponent implements OnChanges {
   statusLabel(s: string): string {
     const map: Record<string, string> = {
       'Out For Season': 'Fuera (temporada)', Out: 'Fuera', Doubtful: 'Duda', Questionable: 'Duda',
-      'Day-To-Day': 'Día a día', Probable: 'Probable', 'Rest-B2B': 'Posible descanso (2º día seguido)',
+      'Day-To-Day': 'Día a día', Probable: 'Probable', 'Injured Reserve': 'Lista de lesionados (IR)', 'Rest-B2B': 'Posible descanso (2º día seguido)',
     };
     return map[s] || s;
   }
@@ -271,6 +271,16 @@ export class GameCardComponent implements OnChanges {
       { label: 'Rating por marcador', away: signed(s.away_points_rating), home: signed(s.home_points_rating),
         hint: 'Puntos sobre un equipo promedio, ajustado por rival' },
     ];
+  }
+
+  get nflInj(): any { return this.sd.player_injuries && this.sd.player_injuries.home_injuries ? this.sd.player_injuries : null; }
+  nflGroup(g: string): string {
+    return ({ OL: 'línea ofensiva', DL: 'línea defensiva', LB: 'linebacker', DB: 'secundaria', WR: 'receptor',
+              TE: 'ala cerrada', RB: 'corredor', QB: 'QB' } as Record<string, string>)[g] || g;
+  }
+  practiceLabel(p: string | null): string {
+    const s = (p || '').toLowerCase();
+    return s.startsWith('full') ? 'entrenó completo' : s.startsWith('limited') ? 'entrenó limitado' : s.startsWith('did not') ? 'no entrenó' : '';
   }
 
   private qbStatus(q: any): string {
