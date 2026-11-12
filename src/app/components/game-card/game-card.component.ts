@@ -259,6 +259,20 @@ export class GameCardComponent implements OnChanges {
     return rows;
   }
 
+  /** Proyección por jugador (puntos, rebotes, asistencias, triples). */
+  projFor(side: string): any[] { return this.sd.player_projections?.[side] || []; }
+  get hasProj(): boolean { return this.projFor('home').length > 0 || this.projFor('away').length > 0; }
+
+  /** Predicción hecha ya empezado el partido (solo referencia). */
+  get late(): any { return this.game?.late_prediction || null; }
+  get lateLabel(): string | null {
+    const l = this.late;
+    if (!l || l.predicted_spread === null || l.predicted_spread === undefined) return null;
+    const s = l.predicted_spread;
+    const fav = s <= 0 ? this.game.home_team : this.game.away_team;
+    return Math.abs(s) < 0.5 ? 'parejo' : `${initials(fav)} por ${Math.abs(s).toFixed(1)}`;
+  }
+
   // ── Bajas compactas ──────────────────────────────────────────────
   openInj = new Set<string>();
   toggleInj(name: string) { this.openInj.has(name) ? this.openInj.delete(name) : this.openInj.add(name); }

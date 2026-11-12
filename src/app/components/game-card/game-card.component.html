@@ -66,7 +66,7 @@
         El modelo {{ result.hit ? 'acertó al ganador' : 'no acertó al ganador' }}@if (result.margin_error !== undefined) { (se equivocó por {{ result.margin_error | number: '1.0-1' }} pts en el margen)}.</p>
     }
     @if (p.frozen) {
-      <p class="fine frozen-note">Predicción de antes del partido ({{ p.frozen_at | date: "d MMM, h:mm a" : undefined : 'es' }}): es la que se mide.</p>
+      <p class="fine frozen-note">Predicción de antes del partido ({{ p.frozen_at | date: "d MMM, h:mm a" : undefined : 'es' }}): es la que se mide.@if (lateLabel) { Con las bajas ya iniciado el partido ({{ late.minutes_after_tip }} min después), el modelo daba {{ lateLabel }}; solo es referencia y no cuenta.}</p>
     } @else if (verdict) {
       @let v = verdict!;
       <p class="verdict">
@@ -326,6 +326,36 @@
             }
           </div>
           <p class="fine">El número es lo que pierde su equipo en el margen si no juega (± su rango), ya contando quién se queda con sus minutos. Toca un jugador para ver el detalle. Ataque y defensa: puntos por 100 posesiones sobre un jugador promedio. "Con él · sin él": rendimiento del equipo esta temporada, sin ajustar.</p>
+        </div>
+      }
+
+      <!-- Proyección por jugador (NBA) -->
+      @if (hasProj) {
+        <div class="block injuries">
+          <div class="block-head"><h4>Proyección por jugador</h4></div>
+          <div class="inj-grid">
+            @for (side of ['away', 'home']; track side) {
+              @if (projFor(side).length) {
+                <div class="inj-col">
+                  <div class="inj-team"><span>{{ side === 'home' ? game.home_team : game.away_team }}</span></div>
+                  <div class="proj">
+                    <div class="proj-row head"><span>Jugador</span><span>Min</span><span>Pts</span><span>Reb</span><span>Ast</span><span>3P</span></div>
+                    @for (x of projFor(side); track x.player) {
+                      <div class="proj-row">
+                        <span class="ellipsis">{{ x.player }}@if (x.play_probability < 1) {<span class="faint"> · si juega ({{ pct(x.play_probability) }})</span>}</span>
+                        <span class="num faint">{{ x.minutes | number: '1.0-0' }}</span>
+                        <span class="num strong">{{ x.pts | number: '1.1-1' }}</span>
+                        <span class="num">{{ x.reb | number: '1.1-1' }}</span>
+                        <span class="num">{{ x.ast | number: '1.1-1' }}</span>
+                        <span class="num">{{ x.fg3m | number: '1.1-1' }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            }
+          </div>
+          <p class="fine">Mitad: su producción por minuto (lo reciente pesa más) por los minutos que se esperan hoy con las bajas; mitad: su promedio de los últimos 10 partidos. En la temporada 2025-26 falló en promedio 4.8 puntos, 2.0 rebotes y 1.4 asistencias por jugador, un poco mejor que solo el promedio de 10. Es una referencia: no se usa para el pronóstico del partido.</p>
         </div>
       }
 

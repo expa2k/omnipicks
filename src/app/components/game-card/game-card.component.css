@@ -196,3 +196,10 @@ img.avatar.logo { object-fit: contain; background: var(--surface); padding: 4px;
 .mp-row .mp-market { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
 .mp-row .pick-actions { flex-direction: row; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
 .block-head .chip { margin-left: auto; }
+
+.proj { display: flex; flex-direction: column; font-size: 13px; }
+.proj-row { display: grid; grid-template-columns: minmax(0, 1fr) 34px 40px 36px 36px 30px; gap: 6px; padding: 6px 0; border-bottom: 1px solid var(--border); align-items: center; }
+.proj-row span:not(:first-child) { text-align: right; }
+.proj-row.head { font-size: 11.5px; color: var(--text-3); font-weight: 600; }
+.proj-row .strong { font-weight: 700; }
+.frozen-note { margin-top: 6px; }
