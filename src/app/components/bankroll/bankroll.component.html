@@ -75,24 +75,54 @@
       @if (live) {
         <div class="hl-stats">
           <div><span class="k">Partidos</span><span class="v num">{{ live.games }}</span></div>
-          <div><span class="k">Acierto de ganador</span><span class="v num">{{ live.winner_pct * 100 | number: '1.0-1' }}%</span></div>
           <div><span class="k">Error del margen</span><span class="v num">{{ live.mae_margin | number: '1.1-1' }} pts</span></div>
-          @if (live.vs_market?.ats_hit_pct !== null && live.vs_market?.ats_hit_pct !== undefined) {
-            <div><span class="k">Contra el spread</span><span class="v num">{{ live.vs_market.ats_hit_pct * 100 | number: '1.0-0' }}%</span></div>
+          <div><span class="k">Error del total</span><span class="v num">{{ live.mae_total | number: '1.1-1' }} pts</span></div>
+          @if (mk?.recommended_total; as rt) {
+            <div><span class="k">Recomendados (todos los mercados)</span><span class="v num">{{ record(rt) }} · {{ units(rt.units) }}</span></div>
           }
         </div>
-        @if (perf?.recent?.length) {
-          <div class="hl-recent">
-            @for (r of perf.recent.slice(0, 8); track r.date + r.matchup) {
-              <div class="hl-row">
-                <span class="dot-res" [class.ok]="r.hit"></span>
-                <span class="ellipsis">{{ r.matchup }}</span>
-                <span class="num faint">{{ r.final }}</span>
+
+        @if (mk) {
+          <div class="mk-table">
+            <div class="mk-row head"><span>Mercado</span><span>Todos sus picks</span><span>Acierto</span><span>Solo recomendados</span><span>Resultado (1 u c/u)</span></div>
+            @for (m of marketKeys; track m.key) {
+              @let a = mk[m.key]?.all;
+              @let r = mk[m.key]?.recommended;
+              <div class="mk-row">
+                <span>{{ m.name }}</span>
+                <span class="num">{{ record(a) }}</span>
+                <span class="num">{{ a?.pct !== null && a?.pct !== undefined ? (a.pct * 100 | number: '1.0-0') + '%' : '—' }}</span>
+                <span class="num">{{ record(r) }}</span>
+                <span class="num" [class.pos]="(r?.units || 0) > 0" [class.neg]="(r?.units || 0) < 0">{{ r && (r.w + r.l) ? units(r.units) : '—' }}</span>
               </div>
             }
           </div>
         }
-        <p class="fine">Predicción guardada antes de cada partido contra el resultado real. Con pocos partidos estas cifras cambian mucho; hacen falta ~150 para sacar conclusiones.@if (liveV1) { Modelo anterior: {{ liveV1.winner_pct * 100 | number: '1.0-0' }}% de acierto.}</p>
+
+        @if (perf?.recent?.length) {
+          <div class="g-table">
+            <div class="g-row head"><span>Partido</span><span>Final</span><span>Ganador</span><span>Spread</span><span>Total</span></div>
+            @for (r of rows; track r.date + r.matchup) {
+              <div class="g-row">
+                <span class="ellipsis">{{ r.away_abbr }} &#64; {{ r.home_abbr }} <span class="faint">· {{ r.date | date: 'd MMM' : undefined : 'es' }}</span></span>
+                <span class="num faint">{{ r.final }}</span>
+                @for (m of marketKeys; track m.key) {
+                  @let pk = r.picks?.[m.key];
+                  @if (pk) {
+                    <span class="g-pick" [ngClass]="'r-' + pk.result" [class.reco]="pk.tier === 'recomendado'"
+                          [attr.title]="'Modelo ' + (pk.prob * 100).toFixed(0) + '%' + (pk.implied !== null ? ' vs casino ' + (pk.implied * 100).toFixed(0) + '%' : '') + (pk.tier === 'recomendado' ? ' · recomendado' : pk.tier === 'revisar' ? ' · revisar' : '')">
+                      <b>{{ icon(pk.result) }}</b> {{ pk.label }}@if (pk.tier === 'recomendado') {<span class="star">★</span>}
+                    </span>
+                  } @else { <span class="faint">—</span> }
+                }
+              </div>
+            }
+          </div>
+          @if (perf.recent.length > 15) {
+            <button class="link" (click)="showAll = !showAll">{{ showAll ? 'Ver menos' : 'Ver los ' + perf.recent.length + ' partidos' }}</button>
+          }
+        }
+        <p class="fine">Cada partido muestra lo que prefería el modelo antes de empezar, en los 3 mercados (✓ acertó, ✗ falló, = empate). La ★ marca lo <strong>recomendado</strong> (3 a 10 puntos de ventaja sobre el casino); el resultado en unidades es lo que habrías ganado o perdido apostando 1 unidad a cada recomendado con el momio real. Con pocos partidos estas cifras cambian mucho: hacen falta cientos para saber si hay ventaja real.@if (liveV1) { Modelo anterior: {{ liveV1.winner_pct * 100 | number: '1.0-0' }}% de acierto en ganador.}</p>
       } @else {
         <p class="muted">Todavía no hay partidos terminados. Se guarda la predicción de cada partido antes de que empiece y aquí aparece el resultado.{{ perf?.pending ? ' Hay ' + perf.pending + ' esperando resultado.' : '' }}</p>
       }

@@ -179,3 +179,20 @@ img.avatar.logo { object-fit: contain; background: var(--surface); padding: 4px;
 .inj-detail dd { margin: 0; color: var(--text); }
 
 .warn-text { color: var(--warning); margin-top: 2px; }
+
+.mp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.mp-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; }
+.mp-chip .mp-k { color: var(--text-3); font-size: 11px; }
+.mp-chip .mp-v { font-weight: 600; color: var(--text); }
+.mp-chip .mp-e { color: var(--success); font-weight: 600; font-variant-numeric: tabular-nums; }
+.mp-chip .mp-r { font-weight: 700; }
+.mp-chip.t-recomendado { border-color: color-mix(in srgb, var(--success) 45%, var(--border)); }
+.mp-chip.t-revisar { border-color: color-mix(in srgb, var(--warning) 45%, var(--border)); }
+.mp-chip.t-sin_valor .mp-v, .mp-chip.t-sin_dato .mp-v { color: var(--text-2); font-weight: 500; }
+.mp-chip.r-win { background: var(--success-soft); border-color: transparent; }
+.mp-chip.r-win .mp-r { color: var(--success); }
+.mp-chip.r-loss { background: var(--danger-soft); border-color: transparent; }
+.mp-chip.r-loss .mp-r { color: var(--danger); }
+.mp-row .mp-market { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.mp-row .pick-actions { flex-direction: row; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+.block-head .chip { margin-left: auto; }

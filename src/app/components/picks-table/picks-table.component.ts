@@ -59,7 +59,7 @@ export class PicksTableComponent implements OnInit {
     return sp === null || sp === undefined || m === null || m === undefined ? -1 : Math.abs(sp - m);
   }
   private bestEdge(g: any): number {
-    return Math.max(-1, ...(g.value_picks || []).filter((pk: any) => pk.tier === 'recomendado').map((pk: any) => pk.model_edge));
+    return Math.max(-1, ...['winner', 'spread', 'total'].map(k => g.model_picks?.[k]).filter((p: any) => p?.tier === 'recomendado').map((p: any) => p.edge));
   }
 
   /** 'hoy' o 'mañana jueves 12' según el día que devuelve la API (hora del Este). */
@@ -136,7 +136,7 @@ export class PicksTableComponent implements OnInit {
   }
 
   private matches(g: any, f: Filter): boolean {
-    if (f === 'value') return (g.value_picks || []).some((pk: any) => pk.tier === 'recomendado');
+    if (f === 'value') return ['winner', 'spread', 'total'].some(k => g.model_picks?.[k]?.tier === 'recomendado');
     if (f === 'high_confidence') return this.gap(g) >= 5;
     return true;
   }

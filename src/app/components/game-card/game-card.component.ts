@@ -104,8 +104,27 @@ export class GameCardComponent implements OnChanges {
     return sp - m;
   }
 
-  get recommended(): any[] { return (this.game?.value_picks || []).filter((pk: any) => pk.tier === 'recomendado'); }
-  get toReview(): any[] { return (this.game?.value_picks || []).filter((pk: any) => pk.tier === 'revisar'); }
+  /** Lo que prefiere el modelo en cada mercado (ganador, spread, total). */
+  get modelPicks(): { key: string; name: string; pick: any }[] {
+    const mp = this.game?.model_picks;
+    if (!mp) return [];
+    const names: Record<string, string> = { winner: 'Ganador', spread: 'Spread', total: 'Total' };
+    return ['winner', 'spread', 'total'].filter(k => mp[k]).map(k => ({ key: k, name: names[k], pick: mp[k] }));
+  }
+  get picksFrozen(): boolean { return !!this.game?.model_picks?.frozen; }
+  get recommended(): any[] { return this.modelPicks.filter(m => m.pick.tier === 'recomendado'); }
+  get toReview(): any[] { return this.modelPicks.filter(m => m.pick.tier === 'revisar'); }
+
+  tierLabel(t: string): string {
+    return ({ recomendado: 'Recomendado', revisar: 'Revisar', sin_valor: 'Sin valor', sin_dato: 'Sin momio' } as Record<string, string>)[t] || t;
+  }
+  resultIcon(r: string | null): string { return r === 'win' ? '✓' : r === 'loss' ? '✗' : r === 'push' ? '=' : ''; }
+  resultLabel(r: string | null): string { return r === 'win' ? 'Acertó' : r === 'loss' ? 'Falló' : r === 'push' ? 'Empate (push)' : ''; }
+
+  bankrollFor(m: { name: string; pick: any }) {
+    return { odds: m.pick.odds, prob: Math.round(m.pick.prob * 1000) / 10,
+             pick: `${m.name}: ${m.pick.label} · ${this.game.away_team} @ ${this.game.home_team}` };
+  }
 
   marketLabel(m: string): string {
     return ({ moneyline: 'Ganador', spread: 'Spread', over_under: 'Total' } as Record<string, string>)[m] || '';

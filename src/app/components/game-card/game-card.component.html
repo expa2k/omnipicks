@@ -73,6 +73,21 @@
       </p>
     }
 
+    <!-- Lo que recomienda el modelo (3 mercados) -->
+    @if (modelPicks.length) {
+      <div class="mp-chips">
+        @for (m of modelPicks; track m.key) {
+          <span class="mp-chip" [ngClass]="'t-' + m.pick.tier + (m.pick.result ? ' r-' + m.pick.result : '')"
+                [attr.title]="m.name + ': modelo ' + pct(m.pick.prob) + (m.pick.implied !== null ? ' vs casino ' + pct(m.pick.implied) : '') + ' · ' + tierLabel(m.pick.tier)">
+            <span class="mp-k">{{ m.name }}</span>
+            <span class="mp-v">{{ m.pick.label }}</span>
+            @if (m.pick.result) { <span class="mp-r">{{ resultIcon(m.pick.result) }}</span> }
+            @else if (m.pick.tier === 'recomendado' && m.pick.edge !== null) { <span class="mp-e">+{{ m.pick.edge * 100 | number: '1.0-1' }}</span> }
+          </span>
+        }
+      </div>
+    }
+
     <!-- Resumen rápido -->
     <div class="quick">
       <div class="stat"><span class="k">{{ isSoccer ? 'Diferencia' : 'Margen (modelo)' }}</span><span class="v num">{{ spreadLabel }}</span></div>
@@ -80,11 +95,7 @@
       @if (marketLine) {
         <div class="stat"><span class="k">Mercado</span><span class="v num">{{ marketLine }}{{ marketTotal !== null ? ' · ' + marketTotal : '' }}</span></div>
       }
-      @if (recommended.length) {
-        <div class="stat"><span class="k">Recomendación</span><span class="v"><span class="chip chip-success">{{ recommended.length }}</span></span></div>
-      } @else if (toReview.length) {
-        <div class="stat"><span class="k">Diferencia</span><span class="v"><span class="chip chip-warning" title="El modelo y el mercado difieren mucho: revisa bajas o noticias">grande</span></span></div>
-      }
+
     </div>
   } @else if (hasError) {
     <div class="notice warning">
@@ -205,39 +216,37 @@
           }
         </div>
 
-        <!-- Recomendaciones (diferencias con el mercado) -->
-        @if (game.value_picks?.length) {
+        <!-- Lo que recomienda el modelo -->
+        @if (modelPicks.length) {
           <div class="block">
-            <div class="block-head"><h4>Recomendaciones</h4></div>
+            <div class="block-head"><h4>Lo que recomienda el modelo</h4>@if (picksFrozen) {<span class="chip">antes del partido</span>}</div>
             <div class="picks">
-              @for (pk of game.value_picks; track pk.id) {
-                <div class="pick" [class.dim]="pk.tier === 'leve'">
+              @for (m of modelPicks; track m.key) {
+                <div class="pick mp-row" [class.dim]="m.pick.tier === 'sin_valor' || m.pick.tier === 'sin_dato'">
                   <div class="pick-main">
-                    <span class="pick-name">{{ pk.pick_description }}</span>
-                    <span class="faint">{{ marketLabel(pk.market) }} · {{ pk.best_sportsbook }} {{ formatAmerican(pk.best_odds) }}
-                      @if (pk.model_probability !== null && pk.implied_probability !== null) { · modelo {{ pct(pk.model_probability) }} vs casino {{ pct(pk.implied_probability) }} }</span>
-                    @if (pk.tier === 'revisar') {
-                      <span class="faint warn-text">{{ pk.model_edge * 100 | number: '1.0-0' }} pts de diferencia: más de lo que suele separar a un buen modelo del mercado. Antes de tomarlo, revisa bajas y noticias.</span>
+                    <span class="faint mp-market">{{ m.name }}</span>
+                    <span class="pick-name">{{ m.pick.label }}</span>
+                    <span class="faint">Modelo {{ pct(m.pick.prob) }}@if (m.pick.implied !== null) { · casino {{ pct(m.pick.implied) }} ({{ formatAmerican(m.pick.odds) }}{{ m.pick.odds_approx ? ', aprox.' : '' }})}@if (m.pick.edge !== null) { · valor {{ signed(m.pick.edge * 100) }} pts}</span>
+                    @if (m.pick.tier === 'revisar') {
+                      <span class="faint warn-text">Diferencia demasiado grande: probablemente al modelo le falta información. Revisa bajas y noticias.</span>
                     }
                   </div>
-                  @if (pk.tier === 'recomendado') {
-                    <div class="pick-actions">
-                      <span class="chip chip-success num" title="Ventaja moderada sobre el mercado">+{{ pk.model_edge * 100 | number: '1.0-1' }} pts</span>
-                      <a class="link small" routerLink="/bankroll" [queryParams]="bankrollParams(pk)">Calcular apuesta</a>
-                    </div>
-                  } @else if (pk.tier === 'revisar') {
-                    <span class="chip chip-warning num" title="Diferencia demasiado grande: probablemente al modelo le falta información">Revisar</span>
-                  } @else {
-                    <span class="chip num">+{{ pk.model_edge * 100 | number: '1.0-1' }} pts</span>
-                  }
+                  <div class="pick-actions">
+                    @if (m.pick.result) {
+                      <span class="chip num" [ngClass]="m.pick.result === 'win' ? 'chip-success' : m.pick.result === 'loss' ? 'chip-danger' : ''">{{ resultIcon(m.pick.result) }} {{ resultLabel(m.pick.result) }}</span>
+                    }
+                    <span class="chip" [ngClass]="m.pick.tier === 'recomendado' ? 'chip-success' : m.pick.tier === 'revisar' ? 'chip-warning' : ''">{{ tierLabel(m.pick.tier) }}</span>
+                    @if (m.pick.tier === 'recomendado' && !m.pick.result) {
+                      <a class="link small" routerLink="/bankroll" [queryParams]="bankrollFor(m)">Calcular apuesta</a>
+                    }
+                  </div>
                 </div>
               }
             </div>
-            <p class="fine"><strong>Recomendado</strong>: el modelo ve entre 3 y 10 puntos de ventaja sobre el casino. <strong>Revisar</strong>: más de 10; casi siempre es información que el modelo no tiene, no una ganga. El modelo no usa el mercado: solo se compara al final.</p>
+            <p class="fine">El modelo elige un lado en cada mercado. <strong>Recomendado</strong>: le ve entre 3 y 10 puntos de ventaja sobre el casino. <strong>Revisar</strong>: más de 10, casi siempre información que le falta. <strong>Sin valor</strong>: lo prefiere, pero no lo suficiente para apostar. El modelo no usa el mercado: solo se compara al final.</p>
           </div>
         }
 
-        <!-- Contexto -->
         @if (isV2) {
           <div class="block">
             <div class="block-head"><h4>Simulación</h4></div>

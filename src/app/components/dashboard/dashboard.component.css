@@ -71,3 +71,5 @@ code { font-size: 12.5px; padding: 1px 6px; border-radius: 6px; background: var(
 .recent-row { display: grid; grid-template-columns: 10px 1fr auto; gap: 8px; align-items: center; font-size: 12.5px; }
 .dot-res { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
 .dot-res.ok { background: var(--success); }
+
+.perf.mk { margin-top: 12px; }

@@ -22,6 +22,14 @@ export class BankrollComponent implements OnInit {
 
   get live() { return this.perf?.models?.nba_players_v2 || null; }
   get liveV1() { return this.perf?.models?.nba_possessions_v1 || null; }
+  get mk() { return this.live?.markets || null; }
+  showAll = false;
+  get rows(): any[] { const r = this.perf?.recent || []; return this.showAll ? r : r.slice(0, 15); }
+  readonly marketKeys = [{ key: 'winner', name: 'Ganador' }, { key: 'spread', name: 'Spread' }, { key: 'total', name: 'Total' }];
+
+  record(x: any): string { return x ? `${x.w}-${x.l}${x.p ? '-' + x.p : ''}` : '—'; }
+  icon(r: string | null): string { return r === 'win' ? '✓' : r === 'loss' ? '✗' : r === 'push' ? '=' : '·'; }
+  units(u: number | null | undefined): string { return u === null || u === undefined ? '—' : `${u > 0 ? '+' : ''}${u.toFixed(2)} u`; }
 
   currentBankroll = 1000;
   calcOdds = -110;
