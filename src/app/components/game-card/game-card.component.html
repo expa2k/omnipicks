@@ -66,7 +66,7 @@
         El modelo {{ result.hit ? 'acertó al ganador' : 'no acertó al ganador' }}@if (result.margin_error !== undefined) { (se equivocó por {{ result.margin_error | number: '1.0-1' }} pts en el margen)}.</p>
     }
     @if (p.frozen) {
-      <p class="fine frozen-note">Predicción de antes del partido ({{ p.frozen_at | date: "d MMM, h:mm a" : undefined : 'es' }}): es la que se mide.@if (lateLabel) { Con las bajas ya iniciado el partido ({{ late.minutes_after_tip }} min después), el modelo daba {{ lateLabel }}; solo es referencia y no cuenta.}</p>
+      <p class="fine frozen-note">Predicción de antes del partido ({{ p.frozen_at | date: "d MMM, h:mm a" : undefined : 'es' }}): es la que se mide.</p>
     } @else if (verdict) {
       @let v = verdict!;
       <p class="verdict">
