@@ -88,6 +88,7 @@
             <span class="mp-k">{{ m.name }}</span>
             <span class="mp-v">{{ m.pick.label }}</span>
             @if (m.pick.result) { <span class="mp-r">{{ resultIcon(m.pick.result) }}</span> }
+            @else if (m.pick.no_line) { <span class="mp-e">s/l</span> }
             @else { <span class="mp-e">{{ pct(m.pick.model_prob ?? m.pick.prob) }}</span> }
           </span>
         }
@@ -240,7 +241,11 @@
                   <div class="pick-main">
                     <span class="faint mp-market">{{ m.name }}</span>
                     <span class="pick-name">{{ m.pick.label }}</span>
+                    @if (m.pick.no_line) {
+                      <span class="faint">El casino todavía no publica esta línea. Proyección del modelo: {{ m.pick.label }}. En cuanto salga la línea se calcula la confianza.</span>
+                    } @else {
                     <span class="faint">Modelo {{ pct(m.pick.model_prob ?? m.pick.prob) }}@if (m.pick.implied !== null && m.pick.implied !== undefined) { · casino {{ pct(m.pick.implied) }} ({{ formatAmerican(m.pick.odds) }}{{ m.pick.odds_approx ? ', aprox.' : '' }})}@if (m.pick.edge !== null && m.pick.edge !== undefined) { · valor contra el casino {{ signed(m.pick.edge * 100) }} pts}</span>
+                    }
                     @if (isNflV2 && m.pick.diff_pts !== undefined && m.pick.diff_pts !== null) {
                       <span class="faint">El modelo ve {{ m.pick.diff_pts | number: '1.1-1' }} pts a favor de este lado respecto a la línea; en el backtest reciente esa diferencia casi no predijo el resultado.</span>
                     }
@@ -252,7 +257,7 @@
                     @if (m.pick.result) {
                       <span class="chip num" [ngClass]="m.pick.result === 'win' ? 'chip-success' : m.pick.result === 'loss' ? 'chip-danger' : ''">{{ resultIcon(m.pick.result) }} {{ resultLabel(m.pick.result) }}</span>
                     }
-                    <span class="chip" [ngClass]="m.pick.confidence === 'alta' ? 'chip-success' : m.pick.confidence === 'media' ? 'chip-warning' : ''">Confianza {{ m.pick.confidence || 'baja' }}</span>
+                    <span class="chip" [ngClass]="m.pick.confidence === 'alta' ? 'chip-success' : m.pick.confidence === 'media' ? 'chip-warning' : ''">{{ confLabel(m.pick.confidence) }}</span>
                     @if (m.pick.tier === 'recomendado' || m.pick.tier === 'revisar') {
                       <span class="chip" [ngClass]="m.pick.tier === 'recomendado' ? 'chip-success' : 'chip-warning'">{{ tierLabel(m.pick.tier) }}</span>
                     }

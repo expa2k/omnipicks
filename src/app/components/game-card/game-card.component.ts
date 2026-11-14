@@ -108,12 +108,16 @@ export class GameCardComponent implements OnChanges {
   get modelPicks(): { key: string; name: string; pick: any }[] {
     const mp = this.game?.model_picks;
     if (!mp) return [];
-    const names: Record<string, string> = { winner: this.isSoccer ? 'Resultado' : 'Ganador', spread: 'Spread', total: 'Total', btts: 'Ambos anotan' };
+    const names: Record<string, string> = { winner: this.isSoccer ? 'Resultado' : 'Ganador', spread: this.isSoccer ? 'Hándicap' : 'Spread', total: this.isSoccer ? 'Goles' : 'Total', btts: 'Ambos anotan' };
     return ['winner', 'spread', 'total', 'btts'].filter(k => mp[k]).map(k => ({ key: k, name: names[k], pick: mp[k] }));
   }
   get picksFrozen(): boolean { return !!this.game?.model_picks?.frozen; }
   get recommended(): any[] { return this.modelPicks.filter(m => m.pick.tier === 'recomendado'); }
   get toReview(): any[] { return this.modelPicks.filter(m => m.pick.tier === 'revisar'); }
+
+  confLabel(c: string | undefined): string {
+    return c === 'sin_linea' ? 'Sin línea aún' : 'Confianza ' + (c || 'baja');
+  }
 
   tierLabel(t: string): string {
     return ({ recomendado: 'Recomendado', revisar: 'Revisar', sin_valor: 'Sin valor', sin_dato: 'Sin momio' } as Record<string, string>)[t] || t;
