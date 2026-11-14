@@ -74,6 +74,7 @@
           <button role="tab" [class.active]="perfSport === 'nba'" (click)="setPerfSport('nba')">NBA</button>
           <button role="tab" [class.active]="perfSport === 'nfl'" (click)="setPerfSport('nfl')">NFL</button>
           <button role="tab" [class.active]="perfSport === 'soccer'" (click)="setPerfSport('soccer')">Fútbol</button>
+          <button role="tab" [class.active]="perfSport === 'mlb'" (click)="setPerfSport('mlb')">MLB</button>
         </div>
       </div>
       @if (perfSport === 'soccer' && live) {

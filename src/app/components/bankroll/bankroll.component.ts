@@ -20,14 +20,14 @@ export class BankrollComponent implements OnInit {
   fromPick: string | null = null;
   perf: any = null;
 
-  perfSport: 'nba' | 'nfl' | 'soccer' = 'nba';
-  readonly sportTitle: Record<string, string> = { nba: 'NBA', nfl: 'NFL', soccer: 'de fútbol' };
+  perfSport: 'nba' | 'nfl' | 'soccer' | 'mlb' = 'nba';
+  readonly sportTitle: Record<string, string> = { nba: 'NBA', nfl: 'NFL', soccer: 'de fútbol', mlb: 'MLB' };
   outLabel(o: string): string { return o === 'home' ? 'Local' : o === 'away' ? 'Visita' : 'Empate'; }
   outIdx(o: string): number { return o === 'home' ? 0 : o === 'draw' ? 1 : 2; }
   get live() { return this.perf?.models?.[this.perf?.main_model || 'nba_players_v2'] || null; }
   get liveV1() { return this.perfSport === 'nba' ? this.perf?.models?.nba_possessions_v1 || null : null; }
 
-  setPerfSport(s: 'nba' | 'nfl' | 'soccer') {
+  setPerfSport(s: 'nba' | 'nfl' | 'soccer' | 'mlb') {
     this.perfSport = s;
     this.perf = null;
     this.showAll = false;

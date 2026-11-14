@@ -194,8 +194,9 @@ export class GameCardComponent implements OnChanges {
   get isV2(): boolean { return this.sd.model === 'nba_players_v2'; }
   get isNflV2(): boolean { return this.sd.model === 'nfl_v2'; }
   get isSoccerV2(): boolean { return this.sd.model === 'soccer_v2'; }
+  get isMlbV2(): boolean { return this.sd.model === 'mlb_v2'; }
   /** Bloque "Por qué este pronóstico" y "Simulación" (modelos nuevos de NBA, NFL y fútbol). */
-  get hasWhy(): boolean { return this.isV2 || this.isNflV2 || this.isSoccerV2; }
+  get hasWhy(): boolean { return this.isV2 || this.isNflV2 || this.isSoccerV2 || this.isMlbV2; }
   get result() { return this.game?.result || null; }
   logo(side: string): string | null { return side === 'home' ? this.game?.home_logo : this.game?.away_logo; }
 
@@ -229,6 +230,7 @@ export class GameCardComponent implements OnChanges {
   get whyRows(): { label: string; away: string; home: string; hint?: string }[] {
     if (this.isNflV2) return this.nflWhyRows;
     if (this.isSoccerV2) return this.soccerWhyRows;
+    if (this.isMlbV2) return this.mlbWhyRows;
     const c = this.sd.context || {};
     const t = this.sd.teams || {};
     const rows: { label: string; away: string; home: string; hint?: string }[] = [];
@@ -248,6 +250,7 @@ export class GameCardComponent implements OnChanges {
   get whyNotes(): string[] {
     if (this.isNflV2) return this.nflWhyNotes;
     if (this.isSoccerV2) return this.soccerWhyNotes;
+    if (this.isMlbV2) return this.mlbWhyNotes;
     const c = this.sd.context || {};
     const notes: string[] = [];
     if (c.rest_diff) notes.push(`${initials(c.rest_diff > 0 ? this.game.home_team : this.game.away_team)} llega con ${Math.abs(c.rest_diff)} día(s) más de descanso.`);
@@ -257,6 +260,29 @@ export class GameCardComponent implements OnChanges {
     if (c.playoffs) notes.push('Playoffs: menos puntos y más minutos para los titulares.');
     const adj = this.sd.context_adjustment;
     if (adj && Math.abs(adj.margin) >= 0.5) notes.push(`El contexto mueve el margen ${signed(adj.margin)} pts hacia ${adj.margin > 0 ? initials(this.game.home_team) : initials(this.game.away_team)}.`);
+    return notes;
+  }
+
+  // ── MLB v2 ───────────────────────────────────────────────────────
+  private get mlbWhyRows(): { label: string; away: string; home: string; hint?: string }[] {
+    const s = this.sd;
+    const xr = s.expected_runs || {};
+    const f2 = (v: any) => (v === null || v === undefined ? '—' : (v > 0 ? '+' : '') + Number(v).toFixed(2));
+    return [
+      { label: 'Abridor', away: s.away_starter || 'por anunciar', home: s.home_starter || 'por anunciar' },
+      { label: 'Rating del abridor', away: f2(s.away_starter_rating), home: f2(s.home_starter_rating),
+        hint: 'Cuántas carreras le quita al rival (escala logarítmica), ajustado por rival, parque y alineación' },
+      { label: 'Carreras esperadas', away: Number(xr.away ?? 0).toFixed(2), home: Number(xr.home ?? 0).toFixed(2) },
+      { label: 'Alineación con ventaja de mano', away: pct(s.platoon?.away), home: pct(s.platoon?.home),
+        hint: 'Fracción de bateadores que tienen ventaja contra la mano del abridor rival' },
+    ];
+  }
+
+  private get mlbWhyNotes(): string[] {
+    const s = this.sd;
+    const notes: string[] = [];
+    if (!s.home_lineup_official || !s.away_lineup_official) notes.push('Alineación oficial aún no publicada: se usa la última del equipo.');
+    if (s.park) notes.push(`Parque: ${s.park} (su efecto en las carreras se aprende del histórico).`);
     return notes;
   }
 

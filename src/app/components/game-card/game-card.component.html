@@ -151,6 +151,8 @@
           }
           @if (isNflV2) {
             <p class="fine">La fuerza sale del EPA por jugada ajustado por rival y del marcador; el QB titular se compara con el que el equipo ha usado en las últimas semanas.</p>
+          } @else if (isMlbV2) {
+            <p class="fine">Modelo de carreras: nivel de cada equipo en la temporada, más la alineación del día, el abridor rival, el parque, la localía y la ventaja de mano. En el backtest contra el cierre no hubo ventaja: los picks son la opinión del modelo con su confianza.</p>
           } @else if (isSoccerV2) {
             <p class="fine">Dixon-Coles: ataque y defensa de cada equipo ajustados por rival, con sus goles (y tiros a puerta en las ligas europeas); en copas, además, la fuerza de cada liga. En el backtest con momios de cierre no hubo ventaja: es un pronóstico, no una recomendación de apuesta.</p>
           } @else {

@@ -32,7 +32,7 @@ export class ApiService {
   }
 
   /** Rendimiento en vivo del modelo de un deporte (nba o nfl). */
-  getPerformance(sport: 'nba' | 'nfl' | 'soccer'): Observable<any> {
+  getPerformance(sport: 'nba' | 'nfl' | 'soccer' | 'mlb'): Observable<any> {
     return this.http.get(`${this.baseUrl}/predictions/${sport}/performance`);
   }
 
