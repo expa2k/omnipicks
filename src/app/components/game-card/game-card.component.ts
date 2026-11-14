@@ -189,8 +189,9 @@ export class GameCardComponent implements OnChanges {
   get sd() { return this.p?.simulation_details || {}; }
   get isV2(): boolean { return this.sd.model === 'nba_players_v2'; }
   get isNflV2(): boolean { return this.sd.model === 'nfl_v2'; }
-  /** Bloque "Por qué este pronóstico" y "Simulación" (modelos nuevos de NBA y NFL). */
-  get hasWhy(): boolean { return this.isV2 || this.isNflV2; }
+  get isSoccerV2(): boolean { return this.sd.model === 'soccer_v2'; }
+  /** Bloque "Por qué este pronóstico" y "Simulación" (modelos nuevos de NBA, NFL y fútbol). */
+  get hasWhy(): boolean { return this.isV2 || this.isNflV2 || this.isSoccerV2; }
   get result() { return this.game?.result || null; }
   logo(side: string): string | null { return side === 'home' ? this.game?.home_logo : this.game?.away_logo; }
 
@@ -223,6 +224,7 @@ export class GameCardComponent implements OnChanges {
   /** Factores del partido que de verdad usa el modelo v2, en palabras. */
   get whyRows(): { label: string; away: string; home: string; hint?: string }[] {
     if (this.isNflV2) return this.nflWhyRows;
+    if (this.isSoccerV2) return this.soccerWhyRows;
     const c = this.sd.context || {};
     const t = this.sd.teams || {};
     const rows: { label: string; away: string; home: string; hint?: string }[] = [];
@@ -241,6 +243,7 @@ export class GameCardComponent implements OnChanges {
 
   get whyNotes(): string[] {
     if (this.isNflV2) return this.nflWhyNotes;
+    if (this.isSoccerV2) return this.soccerWhyNotes;
     const c = this.sd.context || {};
     const notes: string[] = [];
     if (c.rest_diff) notes.push(`${initials(c.rest_diff > 0 ? this.game.home_team : this.game.away_team)} llega con ${Math.abs(c.rest_diff)} día(s) más de descanso.`);
@@ -250,6 +253,38 @@ export class GameCardComponent implements OnChanges {
     if (c.playoffs) notes.push('Playoffs: menos puntos y más minutos para los titulares.');
     const adj = this.sd.context_adjustment;
     if (adj && Math.abs(adj.margin) >= 0.5) notes.push(`El contexto mueve el margen ${signed(adj.margin)} pts hacia ${adj.margin > 0 ? initials(this.game.home_team) : initials(this.game.away_team)}.`);
+    return notes;
+  }
+
+  // ── Fútbol v2 ────────────────────────────────────────────────────
+  private get soccerWhyRows(): { label: string; away: string; home: string; hint?: string }[] {
+    const s = this.sd;
+    const xg = s.expected_goals || {};
+    const r = s.ratings || {};
+    const f2 = (v: any) => (v === null || v === undefined ? '—' : (v > 0 ? '+' : '') + Number(v).toFixed(2));
+    const rows: { label: string; away: string; home: string; hint?: string }[] = [
+      { label: 'Goles esperados', away: Number(xg.away ?? 0).toFixed(2), home: Number(xg.home ?? 0).toFixed(2),
+        hint: 'Goles que se espera que anote cada equipo (Dixon-Coles con goles y tiros a puerta)' },
+    ];
+    if (r.home?.attack !== undefined || r.away?.attack !== undefined) {
+      rows.push({ label: 'Ataque', away: f2(r.away?.attack), home: f2(r.home?.attack), hint: 'Sobre un equipo medio de su liga, ajustado por rival (escala logarítmica de goles)' });
+      rows.push({ label: 'Defensa', away: f2(r.away?.defense), home: f2(r.home?.defense), hint: 'Positivo = recibe menos goles que un equipo medio' });
+    }
+    if (r.home_league) {
+      rows.push({ label: 'Liga', away: r.away_league, home: r.home_league });
+      rows.push({ label: 'Fuerza de su liga', away: f2(r.away_league_strength), home: f2(r.home_league_strength),
+                  hint: 'Aprendida de los cruces en Champions y Europa League' });
+    }
+    return rows;
+  }
+
+  private get soccerWhyNotes(): string[] {
+    const s = this.sd;
+    const notes: string[] = [];
+    if (s.most_likely_score) notes.push(`Marcador más probable: ${initials(this.game.home_team)} ${s.most_likely_score[0]}–${s.most_likely_score[1]} ${initials(this.game.away_team)} (${pct(s.most_likely_prob)}).`);
+    if (s.over_2_5 !== undefined) notes.push(`Más de 2.5 goles: ${pct(s.over_2_5)} · ambos anotan: ${pct(s.btts)}.`);
+    if (s.ratings?.home_league === 'Otras ligas' || s.ratings?.away_league === 'Otras ligas')
+      notes.push('Un equipo es de una liga que no seguimos: su nivel sale solo de sus partidos de copa, hay más incertidumbre.');
     return notes;
   }
 
@@ -319,6 +354,12 @@ export class GameCardComponent implements OnChanges {
   get v2Info(): { label: string; value: string }[] {
     const s = this.sd;
     const rows: { label: string; value: string }[] = [];
+    if (this.isSoccerV2) {
+      if (s.most_likely_score) rows.push({ label: 'Marcador más probable', value: `${s.most_likely_score[0]}–${s.most_likely_score[1]} (${pct(s.most_likely_prob)})` });
+      if (s.over_2_5 !== undefined) rows.push({ label: 'Más de 2.5 goles', value: pct(s.over_2_5) });
+      if (s.btts !== undefined) rows.push({ label: 'Ambos anotan', value: pct(s.btts) });
+      return rows;
+    }
     if (this.isNflV2 && this.p?.predicted_spread !== undefined) {
       const m = -this.p.predicted_spread, t = this.p.predicted_total;
       const z = 1.2816;

@@ -146,6 +146,8 @@
           }
           @if (isNflV2) {
             <p class="fine">La fuerza sale del EPA por jugada ajustado por rival y del marcador; el QB titular se compara con el que el equipo ha usado en las últimas semanas.</p>
+          } @else if (isSoccerV2) {
+            <p class="fine">Dixon-Coles: ataque y defensa de cada equipo ajustados por rival, con sus goles (y tiros a puerta en las ligas europeas); en copas, además, la fuerza de cada liga. En el backtest con momios de cierre no hubo ventaja: es un pronóstico, no una recomendación de apuesta.</p>
           } @else {
             <p class="fine">La fuerza sale de sumar el rating de cada jugador por los minutos que se espera que juegue hoy.</p>
           }
@@ -263,7 +265,7 @@
 
         @if (hasWhy) {
           <div class="block">
-            <div class="block-head"><h4>{{ isNflV2 ? 'Rango del pronóstico' : 'Simulación' }}</h4></div>
+            <div class="block-head"><h4>{{ isNflV2 ? 'Rango del pronóstico' : isSoccerV2 ? 'Marcador y goles' : 'Simulación' }}</h4></div>
             <dl class="kv">
               @for (r of v2Info; track r.label) {
                 <div><dt>{{ r.label }}</dt><dd class="num">{{ r.value }}</dd></div>
