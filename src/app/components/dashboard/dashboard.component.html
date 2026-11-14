@@ -117,9 +117,9 @@
             </div>
             @if (pLive.markets; as mk) {
               <div class="perf mk">
-                <div class="perf-row head"><span>Mercado</span><span>Todos</span><span>Recom.</span><span>Unid.</span></div>
+                <div class="perf-row head"><span>Mercado</span><span>Todos</span><span>Conf. alta</span><span>Unid.</span></div>
                 @for (m of [{k:'winner', n:'Ganador'}, {k:'spread', n:'Spread'}, {k:'total', n:'Total'}]; track m.k) {
-                  <div class="perf-row"><span>{{ m.n }}</span><span class="num">{{ mk[m.k].all.w }}-{{ mk[m.k].all.l }}</span><span class="num">{{ mk[m.k].recommended.w }}-{{ mk[m.k].recommended.l }}</span><span class="num">{{ mk[m.k].recommended.w + mk[m.k].recommended.l ? (mk[m.k].recommended.units > 0 ? '+' : '') + mk[m.k].recommended.units : '—' }}</span></div>
+                  <div class="perf-row"><span>{{ m.n }}</span><span class="num">{{ mk[m.k].all.w }}-{{ mk[m.k].all.l }}</span><span class="num">{{ mk[m.k].confident?.w ?? 0 }}-{{ mk[m.k].confident?.l ?? 0 }}</span><span class="num">{{ (mk[m.k].confident?.w ?? 0) + (mk[m.k].confident?.l ?? 0) ? (mk[m.k].confident.units > 0 ? '+' : '') + mk[m.k].confident.units : '—' }}</span></div>
                 }
               </div>
             }

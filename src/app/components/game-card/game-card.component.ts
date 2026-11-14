@@ -108,8 +108,8 @@ export class GameCardComponent implements OnChanges {
   get modelPicks(): { key: string; name: string; pick: any }[] {
     const mp = this.game?.model_picks;
     if (!mp) return [];
-    const names: Record<string, string> = { winner: 'Ganador', spread: 'Spread', total: 'Total' };
-    return ['winner', 'spread', 'total'].filter(k => mp[k]).map(k => ({ key: k, name: names[k], pick: mp[k] }));
+    const names: Record<string, string> = { winner: this.isSoccer ? 'Resultado' : 'Ganador', spread: 'Spread', total: 'Total', btts: 'Ambos anotan' };
+    return ['winner', 'spread', 'total', 'btts'].filter(k => mp[k]).map(k => ({ key: k, name: names[k], pick: mp[k] }));
   }
   get picksFrozen(): boolean { return !!this.game?.model_picks?.frozen; }
   get recommended(): any[] { return this.modelPicks.filter(m => m.pick.tier === 'recomendado'); }

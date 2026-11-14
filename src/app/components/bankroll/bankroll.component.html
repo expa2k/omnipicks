@@ -111,10 +111,10 @@
 
         @if (mk) {
           <div class="mk-table">
-            <div class="mk-row head"><span>Mercado</span><span>Todos sus picks</span><span>Acierto</span><span>Solo recomendados</span><span>Resultado (1 u c/u)</span></div>
+            <div class="mk-row head"><span>Mercado</span><span>Todos sus picks</span><span>Acierto</span><span>Confianza alta</span><span>Resultado (1 u c/u)</span></div>
             @for (m of marketKeys; track m.key) {
               @let a = mk[m.key]?.all;
-              @let r = mk[m.key]?.recommended;
+              @let r = mk[m.key]?.confident;
               <div class="mk-row">
                 <span>{{ m.name }}</span>
                 <span class="num">{{ record(a) }}</span>

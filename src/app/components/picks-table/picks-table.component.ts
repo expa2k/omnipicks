@@ -36,7 +36,7 @@ export class PicksTableComponent implements OnInit {
 
   readonly sorts = [
     { key: 'time', label: 'Hora' },
-    { key: 'reco', label: 'Recomendación' },
+    { key: 'reco', label: 'Confianza del modelo' },
     { key: 'gap', label: 'Diferencia con el mercado' },
     { key: 'prob', label: 'Más seguro' },
   ] as const;
@@ -59,7 +59,7 @@ export class PicksTableComponent implements OnInit {
     return sp === null || sp === undefined || m === null || m === undefined ? -1 : Math.abs(sp - m);
   }
   private bestEdge(g: any): number {
-    return Math.max(-1, ...['winner', 'spread', 'total'].map(k => g.model_picks?.[k]).filter((p: any) => p?.tier === 'recomendado').map((p: any) => p.edge));
+    return Math.max(-1, ...['winner', 'spread', 'total', 'btts'].map(k => g.model_picks?.[k]).filter((p: any) => p?.confidence === 'alta').map((p: any) => p.model_prob ?? p.prob));
   }
 
   /** 'hoy' o 'mañana jueves 12' según el día que devuelve la API (hora del Este). */
@@ -71,7 +71,7 @@ export class PicksTableComponent implements OnInit {
 
   readonly filters: { key: Filter; label: string }[] = [
     { key: 'all', label: 'Todos' },
-    { key: 'value', label: 'Con recomendación' },
+    { key: 'value', label: 'Confianza alta' },
     { key: 'high_confidence', label: 'Diferencia grande' },
   ];
 
@@ -136,7 +136,7 @@ export class PicksTableComponent implements OnInit {
   }
 
   private matches(g: any, f: Filter): boolean {
-    if (f === 'value') return ['winner', 'spread', 'total'].some(k => g.model_picks?.[k]?.tier === 'recomendado');
+    if (f === 'value') return ['winner', 'spread', 'total', 'btts'].some(k => g.model_picks?.[k]?.confidence === 'alta');
     if (f === 'high_confidence') return this.gap(g) >= 5;
     return true;
   }

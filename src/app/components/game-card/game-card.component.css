@@ -193,6 +193,13 @@ img.avatar.logo { object-fit: contain; background: var(--surface); padding: 4px;
 .mp-chip.r-win .mp-r { color: var(--success); }
 .mp-chip.r-loss { background: var(--danger-soft); border-color: transparent; }
 .mp-chip.r-loss .mp-r { color: var(--danger); }
+/* Picks del modelo por confianza */
+.mp-chip.c-alta { border-color: color-mix(in srgb, var(--success) 55%, var(--border)); }
+.mp-chip.c-alta .mp-e { color: var(--success); }
+.mp-chip.c-media { border-color: color-mix(in srgb, var(--warning) 45%, var(--border)); }
+.mp-chip.c-media .mp-e { color: var(--warning); }
+.mp-chip.c-baja { border-style: dashed; }
+.mp-chip.c-baja .mp-v, .mp-chip.c-baja .mp-e { color: var(--text-2); font-weight: 500; }
 /* NFL: el modelo solo "se inclina" (sin ventaja contra la línea): fichas en gris y borde punteado */
 .mp-chips.lean { align-items: center; }
 .mp-lean { font-size: 11px; color: var(--text-3); margin-right: 2px; }

@@ -80,15 +80,15 @@
 
     <!-- Lo que recomienda el modelo (3 mercados) -->
     @if (modelPicks.length) {
-      <div class="mp-chips" [class.lean]="isNflV2">
-        @if (isNflV2) { <span class="mp-lean" title="En la NFL el modelo no le gana a la línea de cierre: esto es hacia dónde se inclina, no una recomendación">Se inclina por</span> }
+      <div class="mp-chips">
+        <span class="mp-lean" title="Lo que el modelo cree que pasará, contra la línea y el momio del casino, con su confianza">Picks del modelo</span>
         @for (m of modelPicks; track m.key) {
-          <span class="mp-chip" [ngClass]="'t-' + m.pick.tier + (m.pick.result ? ' r-' + m.pick.result : '')"
-                [attr.title]="m.name + ': modelo ' + pct(m.pick.prob) + (m.pick.implied !== null ? ' vs casino ' + pct(m.pick.implied) : '') + ' · ' + tierLabel(m.pick.tier)">
+          <span class="mp-chip" [ngClass]="'c-' + (m.pick.confidence || 'baja') + (m.pick.result ? ' r-' + m.pick.result : '')"
+                [attr.title]="m.name + ': modelo ' + pct(m.pick.model_prob ?? m.pick.prob) + (m.pick.odds !== null && m.pick.odds !== undefined ? ' · momio ' + formatAmerican(m.pick.odds) : '') + (m.pick.implied !== null && m.pick.implied !== undefined ? ' (casino ' + pct(m.pick.implied) + ')' : '') + ' · confianza ' + (m.pick.confidence || 'baja')">
             <span class="mp-k">{{ m.name }}</span>
             <span class="mp-v">{{ m.pick.label }}</span>
             @if (m.pick.result) { <span class="mp-r">{{ resultIcon(m.pick.result) }}</span> }
-            @else if (m.pick.tier === 'recomendado' && m.pick.edge !== null) { <span class="mp-e">+{{ m.pick.edge * 100 | number: '1.0-1' }}</span> }
+            @else { <span class="mp-e">{{ pct(m.pick.model_prob ?? m.pick.prob) }}</span> }
           </span>
         }
       </div>
@@ -236,11 +236,11 @@
             <div class="block-head"><h4>Lo que recomienda el modelo</h4>@if (picksFrozen) {<span class="chip">antes del partido</span>}</div>
             <div class="picks">
               @for (m of modelPicks; track m.key) {
-                <div class="pick mp-row" [class.dim]="m.pick.tier === 'sin_valor' || m.pick.tier === 'sin_dato'">
+                <div class="pick mp-row" [class.dim]="m.pick.confidence === 'baja'">
                   <div class="pick-main">
                     <span class="faint mp-market">{{ m.name }}</span>
                     <span class="pick-name">{{ m.pick.label }}</span>
-                    <span class="faint">Modelo {{ pct(m.pick.prob) }}@if (m.pick.implied !== null) { · casino {{ pct(m.pick.implied) }} ({{ formatAmerican(m.pick.odds) }}{{ m.pick.odds_approx ? ', aprox.' : '' }})}@if (m.pick.edge !== null) { · valor {{ signed(m.pick.edge * 100) }} pts}</span>
+                    <span class="faint">Modelo {{ pct(m.pick.model_prob ?? m.pick.prob) }}@if (m.pick.implied !== null && m.pick.implied !== undefined) { · casino {{ pct(m.pick.implied) }} ({{ formatAmerican(m.pick.odds) }}{{ m.pick.odds_approx ? ', aprox.' : '' }})}@if (m.pick.edge !== null && m.pick.edge !== undefined) { · valor contra el casino {{ signed(m.pick.edge * 100) }} pts}</span>
                     @if (isNflV2 && m.pick.diff_pts !== undefined && m.pick.diff_pts !== null) {
                       <span class="faint">El modelo ve {{ m.pick.diff_pts | number: '1.1-1' }} pts a favor de este lado respecto a la línea; en el backtest reciente esa diferencia casi no predijo el resultado.</span>
                     }
@@ -252,7 +252,10 @@
                     @if (m.pick.result) {
                       <span class="chip num" [ngClass]="m.pick.result === 'win' ? 'chip-success' : m.pick.result === 'loss' ? 'chip-danger' : ''">{{ resultIcon(m.pick.result) }} {{ resultLabel(m.pick.result) }}</span>
                     }
-                    <span class="chip" [ngClass]="m.pick.tier === 'recomendado' ? 'chip-success' : m.pick.tier === 'revisar' ? 'chip-warning' : ''">{{ tierLabel(m.pick.tier) }}</span>
+                    <span class="chip" [ngClass]="m.pick.confidence === 'alta' ? 'chip-success' : m.pick.confidence === 'media' ? 'chip-warning' : ''">Confianza {{ m.pick.confidence || 'baja' }}</span>
+                    @if (m.pick.tier === 'recomendado' || m.pick.tier === 'revisar') {
+                      <span class="chip" [ngClass]="m.pick.tier === 'recomendado' ? 'chip-success' : 'chip-warning'">{{ tierLabel(m.pick.tier) }}</span>
+                    }
                     @if (m.pick.tier === 'recomendado' && !m.pick.result) {
                       <a class="link small" routerLink="/bankroll" [queryParams]="bankrollFor(m)">Calcular apuesta</a>
                     }
@@ -260,7 +263,7 @@
                 </div>
               }
             </div>
-            <p class="fine">El modelo elige un lado en cada mercado. <strong>Recomendado</strong>: le ve entre 3 y 10 puntos de ventaja sobre el casino. <strong>Revisar</strong>: más de 10, casi siempre información que le falta. <strong>Sin valor</strong>: lo prefiere, pero no lo suficiente para apostar. El modelo no usa el mercado: solo se compara al final.</p>
+            <p class="fine">El modelo elige un lado en cada mercado contra la línea y el momio del casino. <strong>Confianza</strong> = su propia probabilidad: alta ≥ 60%, media 55–60%, baja menos. Aparte, <strong>Recomendado</strong> marca cuando además le ve 3–10 puntos de ventaja al momio, y <strong>Revisar</strong> cuando le ve más de 10 (casi siempre información que le falta). El historial mide cómo le va a cada nivel.</p>
             @if (isNflV2) {
               <p class="fine"><strong>NFL:</strong> en el backtest 2017–2026 el modelo no le ganó a la línea de cierre. Por eso sus probabilidades de spread y total quedan cerca de 50% y el ganador nunca se recomienda: úsalo como pronóstico, no como apuesta.</p>
             }
