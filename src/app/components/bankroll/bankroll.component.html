@@ -66,16 +66,40 @@
 
   </div>
 
-  <!-- Historial (modelos en vivo: NBA y NFL) -->
+  <!-- Historial (modelos en vivo: NBA, NFL y fútbol) -->
     <section class="card history-live">
       <div class="hl-head">
-        <h3>Historial del modelo {{ perfSport === 'nfl' ? 'NFL' : 'NBA' }}</h3>
+        <h3>Historial del modelo {{ sportTitle[perfSport] }}</h3>
         <div class="segmented" role="tablist">
           <button role="tab" [class.active]="perfSport === 'nba'" (click)="setPerfSport('nba')">NBA</button>
           <button role="tab" [class.active]="perfSport === 'nfl'" (click)="setPerfSport('nfl')">NFL</button>
+          <button role="tab" [class.active]="perfSport === 'soccer'" (click)="setPerfSport('soccer')">Fútbol</button>
         </div>
       </div>
-      @if (live) {
+      @if (perfSport === 'soccer' && live) {
+        <div class="hl-stats">
+          <div><span class="k">Partidos</span><span class="v num">{{ live.games }}</span></div>
+          <div><span class="k">Acierto del resultado (1X2)</span><span class="v num">{{ live.winner_pct * 100 | number: '1.0-0' }}%</span></div>
+          <div><span class="k">Log loss 1X2 (modelo · casino)</span><span class="v num">{{ live.logloss | number: '1.3-3' }}@if (live.vs_market) { · {{ live.vs_market.market_logloss | number: '1.3-3' }}}</span></div>
+          <div><span class="k">Error de goles totales</span><span class="v num">{{ live.mae_total | number: '1.1-1' }}</span></div>
+        </div>
+        <div class="g-table">
+          <div class="g-row head"><span>Partido</span><span>Final</span><span>Pronóstico</span><span>Casino</span><span></span></div>
+          @for (r of rows; track r.date + r.matchup) {
+            <div class="g-row">
+              <span class="ellipsis">{{ r.home }} vs {{ r.away }} <span class="faint">· {{ r.date | date: 'd MMM' : undefined : 'es' }}</span></span>
+              <span class="num faint">{{ r.final }}</span>
+              <span class="g-pick" [ngClass]="r.hit ? 'r-win' : 'r-loss'"><b>{{ r.hit ? '✓' : '✗' }}</b> {{ outLabel(r.pick) }} {{ r.pick_prob * 100 | number: '1.0-0' }}%</span>
+              <span class="num faint">{{ r.market ? (r.market[outIdx(r.pick)] * 100 | number: '1.0-0') + '%' : '—' }}</span>
+              <span></span>
+            </div>
+          }
+        </div>
+        @if (perf.recent.length > 15) {
+          <button class="link" (click)="showAll = !showAll">{{ showAll ? 'Ver menos' : 'Ver los ' + perf.recent.length + ' partidos' }}</button>
+        }
+        <p class="fine">Cada partido muestra el resultado que el modelo veía más probable antes de empezar (local, empate o visita) y lo que daba el casino a ese mismo resultado. En el fútbol no se recomiendan apuestas: el backtest con momios de cierre no encontró ventaja.@if (perf.backtest) { Backtest {{ perf.backtest.seasons }}: log loss {{ perf.backtest.logloss | number: '1.3-3' }} contra {{ perf.backtest.logloss_pinnacle | number: '1.3-3' }} de Pinnacle.}</p>
+      } @else if (live) {
         <div class="hl-stats">
           <div><span class="k">Partidos</span><span class="v num">{{ live.games }}</span></div>
           <div><span class="k">Error del margen</span><span class="v num">{{ live.mae_margin | number: '1.1-1' }} pts</span></div>

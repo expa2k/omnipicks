@@ -35,8 +35,10 @@ export class DashboardComponent implements OnInit {
 
   /** Panel "en vivo": NBA o NFL. */
   perfNfl: any = null;
-  panelSport: 'nba' | 'nfl' = 'nba';
-  get panelPerf() { return this.panelSport === 'nfl' ? this.perfNfl : this.perf; }
+  perfSoccer: any = null;
+  panelSport: 'nba' | 'nfl' | 'soccer' = 'nba';
+  readonly sportTitle: Record<string, string> = { nba: 'NBA', nfl: 'NFL', soccer: 'de fútbol' };
+  get panelPerf() { return this.panelSport === 'nfl' ? this.perfNfl : this.panelSport === 'soccer' ? this.perfSoccer : this.perf; }
   get pLive() { return this.panelPerf?.models?.[this.panelPerf?.main_model || 'nba_players_v2'] || null; }
   get pLiveV1() { return this.panelSport === 'nba' ? this.liveV1 : null; }
 
@@ -56,8 +58,10 @@ export class DashboardComponent implements OnInit {
       games: this.api.getGamePredictions(),
       perf: this.api.getNbaPerformance().pipe(catchError(() => of(null))),
       perfNfl: this.api.getPerformance('nfl').pipe(catchError(() => of(null))),
+      perfSoccer: this.api.getPerformance('soccer').pipe(catchError(() => of(null))),
     }).subscribe({
-      next: ({ summary, games, perf, perfNfl }: any) => {
+      next: ({ summary, games, perf, perfNfl, perfSoccer }: any) => {
+        this.perfSoccer = perfSoccer;
         this.summary = summary;
         this.perf = perf;
         this.perfNfl = perfNfl;
