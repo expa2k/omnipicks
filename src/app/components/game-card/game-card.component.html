@@ -13,8 +13,10 @@
         <span class="venue hide-sm"><app-icon name="pin" /> {{ game.venue }}</span>
       }
     </div>
-    @if (result) {
+    @if (result && result.hit !== undefined && result.hit !== null) {
       <span class="chip" [ngClass]="result.hit ? 'chip-success' : 'chip-danger'">Final · {{ result.hit ? 'acertó' : 'falló' }}</span>
+    } @else if (result) {
+      <span class="chip">Final</span>
     } @else if (game.status === 'live') {
       <span class="chip chip-danger">En vivo</span>
     } @else if (hasPrediction && uncertainCount > 0) {
@@ -106,6 +108,8 @@
       <app-icon name="alert" />
       <div><strong>Sin datos suficientes.</strong> {{ factors.api_error }}</div>
     </div>
+  } @else if (result || game.status === 'live') {
+    <div class="notice"><app-icon name="clock" /> Sin pronóstico: el partido ya había empezado cuando se agregó al sistema (nunca se pronostica un partido en juego).</div>
   } @else {
     <div class="notice"><app-icon name="clock" /> Analizando este partido…</div>
   }
